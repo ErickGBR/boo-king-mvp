@@ -1,32 +1,37 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import InstallPrompt from '../components/InstallPrompt';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const TEAL = '#14b8a6';
-const TEAL_DARK = '#0d9488';
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-white">
-      <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white">
+      <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2 text-base font-semibold text-gray-900">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg text-white" style={{ backgroundColor: TEAL }}>
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </span>
-            Boo-king
+            {t('app.name')}
           </Link>
           <div className="flex items-center gap-1">
+            <LanguageSwitcher />
             {user ? (
               <>
-                <Link to="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900">Panel</Link>
-                <button type="button" onClick={logout} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900">Cerrar sesión</button>
+                <Link to="/dashboard" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">{t('nav.dashboard')}</Link>
+                <button type="button" onClick={logout} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">{t('nav.logout')}</button>
               </>
             ) : (
               <>
-                <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-gray-900">Iniciar sesión</Link>
-                <Link to="/register" className="rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90" style={{ backgroundColor: TEAL }}>Prueba gratis</Link>
+                <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">{t('nav.login')}</Link>
+                <Link to="/register" className="rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90" style={{ backgroundColor: TEAL }}>{t('nav.tryFree')}</Link>
               </>
             )}
           </div>
@@ -34,71 +39,111 @@ export default function Home() {
       </nav>
 
       <main>
-        <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:px-8">
-          <div className="rounded-2xl px-6 py-16 text-white" style={{ backgroundColor: '#1f2937' }}>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Empieza a recibir reservas hoy mismo
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-gray-300">
-              Únete a miles de negocios que ya usan Boo-king para crecer. Agenda, reprograma y gestiona todas tus citas en un solo lugar.
-            </p>
-            {!user && (
-              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Link to="/register" className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ backgroundColor: TEAL }}>
-                  Crear cuenta gratis
-                  <span aria-hidden>→</span>
-                </Link>
-                <span className="text-sm text-gray-400">Sin tarjeta de crédito requerida</span>
+        <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-transparent to-transparent" />
+          <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-4 py-1.5 text-sm font-medium text-teal-400">
+                <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
+                {t('nav.tryFree')} — No credit card
               </div>
-            )}
-            {user && (
-              <Link to="/dashboard" className="mt-8 inline-flex rounded-xl px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90" style={{ backgroundColor: TEAL }}>
-                Ir al panel
-              </Link>
-            )}
+              <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                {t('hero.title')}
+              </h1>
+              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-gray-300">
+                {t('hero.subtitle')}
+              </p>
+              {!user && (
+                <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                  <Link to="/register" className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105" style={{ backgroundColor: TEAL }}>
+                    {t('hero.cta')}
+                    <span aria-hidden>→</span>
+                  </Link>
+                  <span className="text-sm text-gray-400">{t('hero.noCard')}</span>
+                </div>
+              )}
+              {user && (
+                <Link to="/dashboard" className="mt-10 inline-flex rounded-xl px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105" style={{ backgroundColor: TEAL }}>
+                  {t('hero.goDashboard')}
+                </Link>
+              )}
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-4xl px-4 pb-8 sm:px-6 lg:px-8">
-          <InstallPrompt />
+        <section className="border-t border-gray-100 bg-white py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold text-gray-900">{t('features.title')}</h2>
+              <p className="mt-4 text-gray-600">{t('features.subtitle')}</p>
+            </div>
+            <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: '📅', title: t('features.online'), desc: t('features.onlineDesc') },
+                { icon: '🔔', title: t('features.reminders'), desc: t('features.remindersDesc') },
+                { icon: '👥', title: t('features.team'), desc: t('features.teamDesc') },
+                { icon: '📊', title: t('features.reports'), desc: t('features.reportsDesc') },
+                { icon: '🌐', title: t('features.lang'), desc: t('features.langDesc') },
+                { icon: '📱', title: t('features.mobile'), desc: t('features.mobileDesc') },
+              ].map((f) => (
+                <div key={f.title} className="group rounded-2xl border border-gray-200 p-6 transition-all hover:shadow-lg hover:border-teal-200">
+                  <span className="text-3xl">{f.icon}</span>
+                  <h3 className="mt-4 text-lg font-semibold text-gray-900">{f.title}</h3>
+                  <p className="mt-2 text-sm text-gray-600">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <footer className="border-t border-gray-200 bg-white">
+        {!user && (
+          <section className="bg-gradient-to-r from-teal-600 to-teal-500 py-16">
+            <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+              <h2 className="text-3xl font-bold text-white">{t('cta.title')}</h2>
+              <p className="mt-2 text-teal-100">{t('cta.subtitle')}</p>
+              <Link to="/register" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-teal-600 shadow-lg transition-all hover:shadow-xl hover:scale-105">
+                {t('hero.cta')} <span aria-hidden>→</span>
+              </Link>
+            </div>
+          </section>
+        )}
+
+        <footer className="border-t border-gray-200 bg-gray-50">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-8 md:flex-row md:justify-between">
               <div className="max-w-xs">
                 <div className="flex items-center gap-2">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg text-white" style={{ backgroundColor: TEAL }}>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </span>
-                  <span className="font-semibold text-gray-900">Boo-king</span>
+                  <span className="font-semibold text-gray-900">{t('app.name')}</span>
                 </div>
-                <p className="mt-3 text-sm text-gray-600">
-                  La plataforma de citas que potencia tu negocio. Simple, rápida y profesional.
-                </p>
-                <p className="mt-4 text-xs text-gray-500">2026 Boo-king. Todos los derechos reservados.</p>
+                <p className="mt-3 text-sm text-gray-600">{t('footer.description')}</p>
+                <p className="mt-4 text-xs text-gray-400">2026 {t('app.name')}. All rights reserved.</p>
               </div>
               <div className="flex gap-12">
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">Producto</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">{t('footer.product')}</h3>
                   <ul className="mt-3 space-y-2">
-                    <li><Link to="/" className="text-sm text-gray-600 hover:text-gray-900">Inicio</Link></li>
-                    <li><Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">Iniciar sesión</Link></li>
-                    <li><Link to="/register" className="text-sm text-gray-600 hover:text-gray-900">Registrarse</Link></li>
+                    <li><Link to="/" className="text-sm text-gray-600 hover:text-gray-900">{t('nav.home')}</Link></li>
+                    <li><Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">{t('nav.login')}</Link></li>
+                    <li><Link to="/register" className="text-sm text-gray-600 hover:text-gray-900">{t('nav.register')}</Link></li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">Soporte</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">{t('footer.support')}</h3>
                   <ul className="mt-3 space-y-2">
-                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">Centro de ayuda</a></li>
-                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">Documentación</a></li>
+                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">{t('footer.help')}</a></li>
+                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">{t('footer.docs')}</a></li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">Legal</h3>
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">{t('footer.legal')}</h3>
                   <ul className="mt-3 space-y-2">
-                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">Privacidad</a></li>
-                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">Términos</a></li>
+                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">{t('footer.privacy')}</a></li>
+                    <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900">{t('footer.terms')}</a></li>
                   </ul>
                 </div>
               </div>

@@ -2,10 +2,13 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, getCurrentBusinessId, setCurrentBusinessId } from '../api/client';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import InstallPrompt from '../components/InstallPrompt';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [businesses, setBusinesses] = useState([]);
   const currentId = getCurrentBusinessId();
 
@@ -20,7 +23,6 @@ export default function Dashboard() {
   }, [businesses, currentId]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Abrir por defecto en escritorio
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setSidebarOpen(true);
@@ -39,12 +41,14 @@ export default function Dashboard() {
   const closeSidebar = () => setSidebarOpen(false);
   const toggleSidebar = () => setSidebarOpen((v) => !v);
 
+  const roleLabel = { owner: 'Dueño', admin: 'Admin', staff: 'Staff' };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div
         role="button"
         tabIndex={0}
-        aria-label="Cerrar menú"
+        aria-label={t('common.cancel')}
         className={`fixed inset-0 z-30 bg-black/50 lg:hidden ${sidebarOpen ? 'visible' : 'invisible pointer-events-none'}`}
         onClick={closeSidebar}
         onKeyDown={(e) => e.key === 'Escape' && closeSidebar()}
@@ -57,15 +61,23 @@ export default function Dashboard() {
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#14b8a6] text-white">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </span>
-            <span className="font-semibold text-white">Boo-king</span>
+            <span className="font-semibold text-white">{t('app.name')}</span>
           </div>
         </div>
+        {user && (
+          <div className="px-4 mt-2">
+            <div className="rounded-lg bg-gray-700/50 px-3 py-2 text-xs">
+              <p className="text-gray-300 truncate">{user.email}</p>
+              <p className="text-teal-400 font-medium mt-0.5">{roleLabel[user.role] || user.role}</p>
+            </div>
+          </div>
+        )}
         <nav className="mt-4 space-y-1 px-2">
-          <Link to="/dashboard" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${panelActive ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>Panel</Link>
-          <Link to="/dashboard/appointments" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/appointments') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>Citas</Link>
-          <Link to="/dashboard/businesses" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/businesses') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>Negocios</Link>
-          <Link to="/dashboard/calendar" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/calendar') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>Calendario</Link>
-          <Link to="/dashboard/reportes" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/reportes') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>Reportes</Link>
+          <Link to="/dashboard" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${panelActive ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{t('sidebar.panel')}</Link>
+          <Link to="/dashboard/appointments" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/appointments') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{t('sidebar.appointments')}</Link>
+          <Link to="/dashboard/businesses" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/businesses') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{t('sidebar.businesses')}</Link>
+          <Link to="/dashboard/calendar" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/calendar') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{t('sidebar.calendar')}</Link>
+          <Link to="/dashboard/reportes" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${is('/dashboard/reportes') ? tealBg + ' text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>{t('sidebar.reports')}</Link>
         </nav>
         <div className="mt-auto px-4 pb-4 lg:hidden">
           <button
@@ -76,7 +88,7 @@ export default function Dashboard() {
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            <span>Ocultar menú</span>
+            <span>{t('common.cancel')}</span>
           </button>
         </div>
       </aside>
@@ -86,7 +98,7 @@ export default function Dashboard() {
             type="button"
             onClick={toggleSidebar}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100"
-            aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-label={sidebarOpen ? t('common.cancel') : 'Menú'}
           >
             {sidebarOpen ? (
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -94,8 +106,8 @@ export default function Dashboard() {
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             )}
           </button>
-          <div className="flex flex-1 items-center justify-end gap-4 lg:justify-start">
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5">
+          <div className="flex flex-1 items-center justify-end gap-4 lg:justify-between">
+            <div className="hidden lg:flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14b8a6] text-xs font-semibold text-white">
                 {current ? String(current.name).slice(0, 2).toUpperCase() : '—'}
               </span>
@@ -109,8 +121,11 @@ export default function Dashboard() {
                 ))}
               </select>
             </div>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <button onClick={logout} className="text-sm text-gray-600 hover:text-gray-900">{t('nav.logout')}</button>
+            </div>
           </div>
-          <button onClick={logout} className="text-sm text-gray-600 hover:text-gray-900">Cerrar sesión</button>
         </div>
       </header>
       <main className="p-4 lg:pl-56 lg:p-6">
