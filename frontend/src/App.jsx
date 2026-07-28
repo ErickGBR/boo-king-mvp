@@ -1,6 +1,5 @@
 import { Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -68,15 +67,12 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <GoogleOAuthProvider clientId={clientId}>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </GoogleOAuthProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );
