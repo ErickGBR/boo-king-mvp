@@ -85,7 +85,6 @@ model Appointment {
   endsAt      DateTime @map("ends_at")
   status      String   @default("confirmed")
   notes       String?
-  googleEventId String? @map("google_event_id")
   meetingLink   String? @map("meeting_link")
   notifyByEmail Boolean @default(true) @map("notify_by_email")
   createdAt   DateTime @default(now()) @map("created_at")
