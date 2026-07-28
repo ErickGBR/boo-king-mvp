@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { signToken, authMiddleware } from '../middleware/auth.js';
-import { verifyGoogleToken } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -66,38 +65,6 @@ router.post('/logout', (_, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   res.json({ user: req.user });
-});
-
-router.post('/google', async (req, res) => {
-  const { idToken } = req.body;
-  if (!idToken) return res.status(422).json({ error: 'idToken required' });
-  const payload = await verifyGoogleToken(idToken);
-  if (!payload) return res.status(401).json({ error: 'Invalid Google token' });
-  const email = payload.email;
-  if (!email) return res.status(401).json({ error: 'Email required from Google' });
-  let user = await prisma.user.findUnique({ where: { email } });
-  if (user) {
-    if (!user.googleId) {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: { googleId: payload.sub, avatar: payload.picture || user.avatar },
-        select: { id: true, name: true, email: true, subscriptionPlan: true, avatar: true },
-      });
-    }
-  } else {
-    user = await prisma.user.create({
-      data: {
-        name: payload.name || email.split('@')[0],
-        email,
-        googleId: payload.sub,
-        avatar: payload.picture || null,
-        subscriptionPlan: 'free',
-      },
-      select: { id: true, name: true, email: true, subscriptionPlan: true, avatar: true },
-    });
-  }
-  const token = signToken({ userId: user.id });
-  res.json({ user, token });
 });
 
 export default router;
