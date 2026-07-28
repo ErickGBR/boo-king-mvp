@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'pwaInstallDismissedUntil';
 const DISMISS_DAYS = 7;
@@ -33,6 +34,7 @@ function setDismissed() {
 }
 
 export default function InstallPrompt() {
+  const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
 
@@ -65,15 +67,13 @@ export default function InstallPrompt() {
   if (!visible) return null;
 
   const mobile = isMobile();
-  const copy = mobile
-    ? 'Instala Boo-king en tu teléfono para acceder más rápido.'
-    : 'Instala Boo-king en el escritorio para acceder más rápido.';
+  const copy = t('install.prompt', { device: mobile ? t('install.phone') : t('install.desktop') });
 
   return (
     <div
       className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900"
       role="region"
-      aria-label="Instalar aplicación"
+      aria-label={t('install.install')}
     >
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-500 text-white">
@@ -89,14 +89,14 @@ export default function InstallPrompt() {
           onClick={handleInstall}
           className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-600"
         >
-          Instalar
+          {t('install.install')}
         </button>
         <button
           type="button"
           onClick={handleDismiss}
           className="rounded-lg px-3 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100"
         >
-          Ahora no
+          {t('install.later')}
         </button>
       </div>
     </div>
