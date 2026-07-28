@@ -26,8 +26,8 @@ router.post(
     }
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed, subscriptionPlan: 'free' },
-      select: { id: true, name: true, email: true, subscriptionPlan: true },
+      data: { name, email, password: hashed },
+      select: { id: true, name: true, email: true, role: true },
     });
     const token = signToken({ userId: user.id });
     res.status(201).json({ user, token });
@@ -53,7 +53,7 @@ router.post(
     }
     const token = signToken({ userId: user.id });
     res.json({
-      user: { id: user.id, name: user.name, email: user.email, subscriptionPlan: user.subscriptionPlan, avatar: user.avatar },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
       token,
     });
   }
