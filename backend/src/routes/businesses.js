@@ -8,10 +8,6 @@ const prisma = new PrismaClient();
 
 router.use(authMiddleware);
 
-function maxBusinesses(plan) {
-  return 100;
-}
-
 router.get('/', async (req, res) => {
   const businesses = await prisma.business.findMany({
     where: { userId: req.user.id },
@@ -40,10 +36,6 @@ router.post(
     body('locationType').isIn(['presencial', 'online']),
   ],
   async (req, res) => {
-    const count = await prisma.business.count({ where: { userId: req.user.id } });
-    if (count >= maxBusinesses(req.user.subscriptionPlan)) {
-      return res.status(403).json({ error: 'Maximum businesses reached for your plan' });
-    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     const slug = req.body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
