@@ -14,9 +14,6 @@ model User {
   email             String    @unique
   emailVerifiedAt   DateTime? @map("email_verified_at")
   password          String?
-  googleId          String?   @unique @map("google_id")
-  googleRefreshToken String?  @map("google_refresh_token")
-  googleCalendarSync Boolean   @default(false) @map("google_calendar_sync")
   avatar            String?
   subscriptionPlan  String    @default("free") @map("subscription_plan")
   rememberToken    String?   @map("remember_token")
