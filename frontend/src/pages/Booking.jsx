@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import GoogleMapsLink from '../components/GoogleMapsLink';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -299,9 +298,6 @@ export default function Booking() {
               <p className="font-semibold text-[#0d9488]">Reserva confirmada</p>
               <p className="mt-1 text-sm text-gray-600">Te hemos enviado un correo con los detalles.</p>
             </div>
-            {business.locationType === 'presencial' && business.address && (
-              <GoogleMapsLink address={business.address} />
-            )}
             {business.locationType === 'online' && (
               <div className="mt-4 rounded-xl border border-purple-200 bg-purple-50 p-4">
                 <p className="text-sm font-medium text-purple-800">🔗 Reunión en línea</p>
