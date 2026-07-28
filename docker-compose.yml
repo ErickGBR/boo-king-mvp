@@ -1,0 +1,46 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: appointments_backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: "file:/app/data/sqlite.db"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend_data:/app/data
+    networks:
+      - appointments
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: appointments_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_PROXY_TARGET: http://backend:4000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - appointments
+
+networks:
+  appointments:
+    driver: bridge
+
+volumes:
+  backend_data:
+    driver: local

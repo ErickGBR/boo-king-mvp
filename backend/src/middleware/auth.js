@@ -1,0 +1,51 @@
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+export function signToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+export function verifyToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+export async function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const decoded = verifyToken(token);
+  if (!decoded?.userId) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: { id: true, name: true, email: true, subscriptionPlan: true, avatar: true },
+  });
+  if (!user) {
+    return res.status(401).json({ error: 'User not found' });
+  }
+  req.user = user;
+  next();
+}
+
+export function optionalAuth(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
+  if (!token) return next();
+  const decoded = verifyToken(token);
+  if (decoded?.userId) {
+    prisma.user.findUnique({ where: { id: decoded.userId } }).then((u) => {
+      req.user = u;
+      next();
+    }).catch(() => next());
+  } else {
+    next();
+  }
+}

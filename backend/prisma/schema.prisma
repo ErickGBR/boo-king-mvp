@@ -1,0 +1,99 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  password          String?
+  googleId          String?   @unique @map("google_id")
+  googleRefreshToken String?  @map("google_refresh_token")
+  googleCalendarSync Boolean   @default(false) @map("google_calendar_sync")
+  avatar            String?
+  subscriptionPlan  String    @default("free") @map("subscription_plan")
+  rememberToken    String?   @map("remember_token")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  businesses   Business[]
+  appointments Appointment[]
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  sort      Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  businesses Business[]
+}
+
+model Business {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  categoryId       Int      @map("category_id")
+  name             String
+  slug             String   @unique
+  description      String?
+  durationMinutes  Int      @map("duration_minutes")
+  locationType     String   @default("presencial") @map("location_type")
+  address          String?
+  meetingUrl       String?  @map("meeting_url")
+  timezone         String   @default("America/Mexico_City")
+  logoPath         String?  @map("logo_path")
+  brandingFont     String?  @map("branding_font")
+  brandingHeaderBg String?  @map("branding_header_bg")
+  brandingHeaderText String? @map("branding_header_text")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  schedules   BusinessSchedule[]
+  appointments Appointment[]
+}
+
+model BusinessSchedule {
+  id         Int      @id @default(autoincrement())
+  businessId Int      @map("business_id")
+  dayOfWeek  Int      @map("day_of_week")
+  startTime  String   @map("start_time")
+  endTime    String   @map("end_time")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, dayOfWeek])
+}
+
+model Appointment {
+  id          Int      @id @default(autoincrement())
+  businessId  Int      @map("business_id")
+  userId      Int?     @map("user_id")
+  guestName   String   @map("guest_name")
+  guestEmail  String   @map("guest_email")
+  guestPhone  String?  @map("guest_phone")
+  startsAt    DateTime @map("starts_at")
+  endsAt      DateTime @map("ends_at")
+  status      String   @default("confirmed")
+  notes       String?
+  googleEventId String? @map("google_event_id")
+  meetingLink   String? @map("meeting_link")
+  notifyByEmail Boolean @default(true) @map("notify_by_email")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

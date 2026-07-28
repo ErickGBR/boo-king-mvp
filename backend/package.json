@@ -1,0 +1,30 @@
+{
+  "name": "boo-king-backend",
+  "version": "1.0.0",
+  "description": "Boo-king appointments API",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "docker:dev": "prisma db push && node --watch src/index.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.js",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-validator": "^7.2.0",
+    "google-auth-library": "^10.9.1",
+    "googleapis": "^173.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.22.0"
+  }
+}
