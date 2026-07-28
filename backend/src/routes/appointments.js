@@ -3,6 +3,7 @@ import { body, query, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 import { getAvailableSlots, getAvailableSlotsForRange } from '../services/bookingSlots.js';
+import { sendRescheduleEmail } from '../services/email.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -140,6 +141,7 @@ router.put('/:id/reschedule', authMiddleware, [
     data: { startsAt, endsAt },
     include: { business: { include: { category: true } } },
   });
+  sendRescheduleEmail(updated, business).catch(console.error);
   res.json(updated);
 });
 

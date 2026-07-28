@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { getAvailableSlots, getAvailableSlotsForRange, isSlotAvailableForBusiness } from '../services/bookingSlots.js';
+import { sendConfirmationEmail } from '../services/email.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -93,6 +94,7 @@ router.post('/business/:slug/reserve', [
     },
     include: { business: { include: { category: true } } },
   });
+  sendConfirmationEmail(appointment, business).catch(console.error);
   res.status(201).json({ appointment, success: true });
 });
 
