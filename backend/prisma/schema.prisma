@@ -22,6 +22,7 @@ model User {
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   businesses   Business[]
+  staff        BusinessStaff[]
   appointments Appointment[]
 }
 
@@ -58,6 +59,7 @@ model Business {
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   category    Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   schedules   BusinessSchedule[]
+  staff       BusinessStaff[]
   appointments Appointment[]
 }
 
@@ -73,6 +75,20 @@ model BusinessSchedule {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, dayOfWeek])
+}
+
+model BusinessStaff {
+  id         Int      @id @default(autoincrement())
+  businessId Int      @map("business_id")
+  userId     Int      @map("user_id")
+  role       String   @default("staff")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, userId])
 }
 
 model Appointment {
