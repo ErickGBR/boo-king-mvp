@@ -16,7 +16,6 @@ model User {
   emailVerifiedAt   DateTime? @map("email_verified_at")
   password          String?
   avatar            String?
-  subscriptionPlan  String    @default("free") @map("subscription_plan")
   rememberToken    String?   @map("remember_token")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
