@@ -3,7 +3,6 @@ import { body, query, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 import { getAvailableSlots, getAvailableSlotsForRange } from '../services/bookingSlots.js';
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -110,12 +109,6 @@ router.post(
       },
       include: { business: { include: { category: true } } },
     });
-    if (req.user?.googleCalendarSync) {
-      const business = await prisma.business.findUnique({ where: { id: businessId } });
-      if (business) {
-        createCalendarEvent(appointment, business, req.user).catch(console.error);
-      }
-    }
     res.status(201).json(appointment);
   }
 );
@@ -147,9 +140,6 @@ router.put('/:id/reschedule', authMiddleware, [
     data: { startsAt, endsAt },
     include: { business: { include: { category: true } } },
   });
-  if (req.user?.googleCalendarSync) {
-    updateCalendarEvent(updated, business, req.user).catch(console.error);
-  }
   res.json(updated);
 });
 
