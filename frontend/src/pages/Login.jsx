@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleLoginButton from '../components/GoogleLoginButton';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -37,15 +36,6 @@ export default function Login() {
           </div>
           <button type="submit" className="w-full rounded-xl bg-teal-500 py-2.5 font-semibold text-white hover:bg-teal-600">Entrar</button>
         </form>
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-500">o continúa con</span>
-          </div>
-        </div>
-        <GoogleLoginButton />
         <p className="mt-4 text-center text-sm text-gray-500">
           ¿No tienes cuenta? <Link to="/register" className="text-teal-600 hover:underline">Regístrate</Link>
         </p>
