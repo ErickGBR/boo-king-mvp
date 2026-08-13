@@ -2,27 +2,36 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 /**
- * Google sign-in button (implicit flow). Sends the access token to
- * /api/auth/google, which verifies it (ID token or tokeninfo fallback)
- * and creates or links the user account.
+ * Google sign-in button (auth-code flow — Option A of the code review, C1).
+ * Requests an authorization code from Google Identity Services and sends ONLY
+ * that code to /api/auth/google; the backend exchanges it for an ID token
+ * verified with a strict audience, so an access token never touches the
+ * backend and the insecure tokeninfo fallback is gone.
+ *
+ * Renders nothing when VITE_GOOGLE_CLIENT_ID is not configured (M3): the
+ * email/password login keeps working without Google.
  */
 export default function GoogleLoginButton() {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
+    flow: 'auth-code',
+    onSuccess: async ({ code }) => {
       try {
-        await loginWithGoogle(tokenResponse.access_token);
+        await loginWithGoogle(code);
         navigate('/dashboard');
       } catch (err) {
         console.error('Google login error:', err);
       }
     },
     onError: () => console.error('Google login failed'),
-    flow: 'implicit',
   });
+
+  if (!GOOGLE_CLIENT_ID) return null;
 
   return (
     <button

@@ -15,6 +15,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const inputRef = useRef(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => {
@@ -142,7 +143,7 @@ export default function Login() {
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
-          <GoogleLoginButton />
+          {googleClientId && <GoogleLoginButton />}
 
           <p className="mt-5 text-center text-sm text-gray-500">
             {t('login.noAccount')}{' '}

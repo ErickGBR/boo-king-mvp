@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 import { getAvailableSlots, getAvailableSlotsForRange } from '../services/bookingSlots.js';
 import { sendRescheduleEmail } from '../services/email.js';
+import { syncAppointmentToGoogleCalendar, deleteAppointmentGoogleEvent } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -110,6 +111,9 @@ router.post(
       },
       include: { business: { include: { category: true } } },
     });
+    // M2 — mirror the appointment to the owner's Google Calendar when sync is
+    // enabled. Defensive: a Google failure never blocks the local booking.
+    await syncAppointmentToGoogleCalendar(appointment);
     res.status(201).json(appointment);
   }
 );
@@ -142,6 +146,29 @@ router.put('/:id/reschedule', authMiddleware, [
     include: { business: { include: { category: true } } },
   });
   sendRescheduleEmail(updated, business).catch(console.error);
+  // M2 — keep the mirrored Google Calendar event in sync on reschedule.
+  await syncAppointmentToGoogleCalendar(updated);
+  res.json(updated);
+});
+
+/**
+ * POST /:id/cancel — marks an appointment as cancelled and removes its Google
+ * Calendar event (defensive: a Google failure never blocks the cancellation).
+ */
+router.post('/:id/cancel', authMiddleware, async (req, res) => {
+  const id = Number(req.params.id);
+  const businessId = getCurrentBusinessId(req);
+  if (!businessId) return res.status(400).json({ error: 'Select a business' });
+  const appointment = await prisma.appointment.findFirst({
+    where: { id, businessId },
+  });
+  if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+  const updated = await prisma.appointment.update({
+    where: { id },
+    data: { status: 'cancelled' },
+    include: { business: { include: { category: true } } },
+  });
+  await deleteAppointmentGoogleEvent(updated);
   res.json(updated);
 });
 

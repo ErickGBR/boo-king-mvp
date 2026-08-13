@@ -35,8 +35,13 @@ export function AuthProvider({ children }) {
         return user;
       });
 
-  const loginWithGoogle = (credential) =>
-    api('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
+  /**
+   * Google sign-in (auth-code flow): the browser sends the authorization code
+   * from Google Identity Services; the backend exchanges it for an ID token.
+   * @param {string} code - Google OAuth2 authorization code
+   */
+  const loginWithGoogle = (code) =>
+    api('/api/auth/google', { method: 'POST', body: JSON.stringify({ code }) })
       .then(({ user, token }) => {
         localStorage.setItem('token', token);
         setUser(user);

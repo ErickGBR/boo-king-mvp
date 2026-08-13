@@ -3,6 +3,7 @@ import { body, param, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { getAvailableSlots, getAvailableSlotsForRange, isSlotAvailableForBusiness } from '../services/bookingSlots.js';
 import { sendConfirmationEmail } from '../services/email.js';
+import { syncAppointmentToGoogleCalendar } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -95,6 +96,9 @@ router.post('/business/:slug/reserve', [
     include: { business: { include: { category: true } } },
   });
   sendConfirmationEmail(appointment, business).catch(console.error);
+  // M2 — mirror the reservation to the owner's Google Calendar when sync is
+  // enabled. Defensive: a Google failure never blocks the booking.
+  await syncAppointmentToGoogleCalendar(appointment);
   res.status(201).json({ appointment, success: true });
 });
 

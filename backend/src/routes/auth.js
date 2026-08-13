@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { signToken, authMiddleware } from '../middleware/auth.js';
-import { verifyGoogleToken, verifyGoogleAccessToken } from '../services/google.js';
+import { verifyGoogleToken, exchangeCode } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -68,17 +68,26 @@ router.get('/me', authMiddleware, async (req, res) => {
   res.json({ user: req.user });
 });
 
+/**
+ * POST /api/auth/google — Google sign-in via the OAuth2 auth-code flow
+ * (Option A of the review, C1). The browser only sends an authorization code
+ * (redirect_uri=postmessage per Google Identity Services); the backend
+ * exchanges it for an ID token, verifies it with a strict audience bound to
+ * GOOGLE_CLIENT_ID and requires email_verified === true. An access token is
+ * never accepted, so the insecure tokeninfo fallback was removed.
+ */
 router.post('/google', async (req, res) => {
   try {
-    const { credential, idToken } = req.body || {};
-    const googleToken = credential || idToken;
-    if (!googleToken) {
-      return res.status(422).json({ error: 'Google credential required' });
+    const { code } = req.body || {};
+    if (!code || typeof code !== 'string') {
+      return res.status(422).json({ error: 'Google authorization code required' });
     }
-    // Prefer ID token verification; fall back to tokeninfo for access tokens.
-    let payload = await verifyGoogleToken(googleToken);
-    if (!payload) payload = await verifyGoogleAccessToken(googleToken);
-    if (!payload?.email) {
+    const tokens = await exchangeCode(code, 'postmessage');
+    if (!tokens?.id_token) {
+      return res.status(401).json({ error: 'Invalid Google code' });
+    }
+    const payload = await verifyGoogleToken(tokens.id_token);
+    if (!payload?.email || payload.email_verified !== true) {
       return res.status(401).json({ error: 'Invalid Google token' });
     }
     const email = payload.email;

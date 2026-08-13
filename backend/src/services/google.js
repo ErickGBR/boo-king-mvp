@@ -18,6 +18,10 @@ function getClient() {
 
 /**
  * Verifies a Google ID token and returns its payload, or null on failure.
+ * The audience is strictly bound to GOOGLE_CLIENT_ID: tokens minted for other
+ * clients are rejected by the library. This is the ONLY entry point used to
+ * trust a Google identity in the login flow (the insecure tokeninfo fallback
+ * `verifyGoogleAccessToken` was removed — see C1).
  * @param {string} idToken - Google ID token (JWT from Google Identity Services)
  * @returns {Promise<object|null>} decoded payload or null
  */
@@ -28,31 +32,6 @@ export async function verifyGoogleToken(idToken) {
     return ticket.getPayload();
   } catch (err) {
     console.error('Google token verification error:', err);
-    return null;
-  }
-}
-
-/**
- * Verifies a Google access token (implicit flow) against Google's tokeninfo
- * endpoint and returns a normalized payload, or null on failure.
- * Used as a fallback for frontends that send an access_token instead of an ID token.
- * @param {string} accessToken - Google OAuth2 access token
- * @returns {Promise<object|null>} normalized payload or null
- */
-export async function verifyGoogleAccessToken(accessToken) {
-  try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data?.email) return null;
-    return {
-      sub: data.sub || null,
-      email: data.email,
-      name: data.name || null,
-      picture: data.picture || null,
-    };
-  } catch (err) {
-    console.error('Google access token verification error:', err);
     return null;
   }
 }
@@ -81,24 +60,33 @@ export function getOAuth2Client() {
 
 /**
  * Generates the Google OAuth2 authorization URL for Calendar access.
+ * @param {{ state?: string }} [options] - optional OAuth state to round-trip
+ *   through the authorization request (CSRF protection, see C2/M1)
  * @returns {string} authorization URL
  */
-export function getAuthUrl() {
+export function getAuthUrl({ state } = {}) {
   const oauth2 = getOAuth2Client();
   return oauth2.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
     scope: CALENDAR_SCOPES,
+    state,
   });
 }
 
 /**
  * Exchanges an OAuth2 authorization code for tokens.
  * @param {string} code - authorization code from the callback query string
- * @returns {Promise<object>} token set ({ access_token, refresh_token, ... })
+ * @param {string} [redirectUri] - redirect URI that was used when the code was
+ *   issued. Defaults to the app CALLBACK_URL (calendar flow). Pass
+ *   'postmessage' for Google Identity Services codes exchanged server-side
+ *   (login flow, see C1).
+ * @returns {Promise<object>} token set ({ access_token, refresh_token, id_token, ... })
  */
-export async function exchangeCode(code) {
-  const oauth2 = getOAuth2Client();
+export async function exchangeCode(code, redirectUri) {
+  const oauth2 = redirectUri
+    ? new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri)
+    : getOAuth2Client();
   const { tokens } = await oauth2.getToken(code);
   return tokens;
 }
@@ -199,4 +187,145 @@ export async function deleteCalendarEvent({ userId, googleEventId }) {
     if (err?.status === 404 || err?.code === 404) return { deleted: false };
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Appointment ⇄ Google Calendar wiring (M2 — replaces the cosmetic toggle)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves the owner (User) of the business an appointment belongs to.
+ * @param {number} businessId - business id
+ * @returns {Promise<{ userId: number, name: string, address: string|null, meetingUrl: string|null, timezone: string }|null>}
+ */
+async function findAppointmentOwner(businessId) {
+  return prisma.business.findUnique({
+    where: { id: businessId },
+    select: { userId: true, name: true, address: true, meetingUrl: true, timezone: true },
+  });
+}
+
+/**
+ * Builds the Calendar API event payload for an appointment on the owner's
+ * primary calendar.
+ * @param {object} appointment - appointment row
+ * @param {object} business - business (owner) row
+ * @returns {{ userId: number, summary: string, description: string, start: Date, end: Date, location?: string, timeZone?: string }}
+ */
+function buildAppointmentEventPayload(appointment, business) {
+  return {
+    userId: business.userId,
+    summary: `${appointment.guestName} — ${business.name}`,
+    description: [
+      `Cliente: ${appointment.guestName}`,
+      appointment.guestEmail ? `Email: ${appointment.guestEmail}` : null,
+      appointment.guestPhone ? `Teléfono: ${appointment.guestPhone}` : null,
+      appointment.notes ? `Notas: ${appointment.notes}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n'),
+    start: appointment.startsAt,
+    end: appointment.endsAt,
+    location: business.meetingUrl || business.address || undefined,
+    timeZone: business.timezone,
+  };
+}
+
+/**
+ * Defensively synchronizes an appointment to the owner's Google Calendar.
+ * Creates the event when the owner has sync enabled and a refresh token and
+ * the appointment has no event yet; updates it otherwise. Persists the
+ * googleEventId on the appointment. NEVER throws: a Google failure must not
+ * block the local booking flow (see M2).
+ * @param {object} appointment - appointment row (needs businessId, startsAt, endsAt, googleEventId)
+ * @returns {Promise<void>}
+ */
+export async function syncAppointmentToGoogleCalendar(appointment) {
+  try {
+    const business = await findAppointmentOwner(appointment.businessId);
+    if (!business) return;
+    const user = await prisma.user.findUnique({
+      where: { id: business.userId },
+      select: { googleCalendarSync: true, googleRefreshToken: true },
+    });
+    if (!user?.googleCalendarSync || !user.googleRefreshToken) return;
+    const payload = buildAppointmentEventPayload(appointment, business);
+    if (appointment.googleEventId) {
+      await updateCalendarEvent({ userId: business.userId, googleEventId: appointment.googleEventId, ...payload });
+    } else {
+      const created = await createCalendarEvent(payload);
+      if (created?.googleEventId) {
+        await prisma.appointment.update({
+          where: { id: appointment.id },
+          data: { googleEventId: created.googleEventId },
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Google calendar sync error (appointment id=%s):', appointment?.id, err?.message || err);
+  }
+}
+
+/**
+ * Defensively removes the Google Calendar event linked to an appointment and
+ * clears its googleEventId. NEVER throws.
+ * @param {object} appointment - appointment row (needs businessId, googleEventId)
+ * @returns {Promise<void>}
+ */
+export async function deleteAppointmentGoogleEvent(appointment) {
+  try {
+    if (!appointment.googleEventId) return;
+    const business = await findAppointmentOwner(appointment.businessId);
+    if (!business) return;
+    const result = await deleteCalendarEvent({
+      userId: business.userId,
+      googleEventId: appointment.googleEventId,
+    });
+    // result === null means the owner is not connected; otherwise the remote
+    // event is gone (either deleted or already missing) so the local id can be
+    // cleared to keep the appointment consistent.
+    if (result) {
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: { googleEventId: null },
+      });
+    }
+  } catch (err) {
+    console.error('Google calendar delete error (appointment id=%s):', appointment?.id, err?.message || err);
+  }
+}
+
+/**
+ * Backfills Google Calendar events for all upcoming confirmed appointments of
+ * the user's businesses that are not yet mirrored (no googleEventId). Used by
+ * POST /api/google/sync so that enabling sync performs a real synchronization.
+ * @param {number} userId - user id
+ * @returns {Promise<number[]>} ids of the appointments newly mirrored
+ */
+export async function syncAllUpcomingAppointments(userId) {
+  const businesses = await prisma.business.findMany({ where: { userId }, select: { id: true } });
+  const businessIds = businesses.map((b) => b.id);
+  if (!businessIds.length) return [];
+  const upcoming = await prisma.appointment.findMany({
+    where: { businessId: { in: businessIds }, status: 'confirmed', startsAt: { gte: new Date() } },
+  });
+  const synced = [];
+  for (const appointment of upcoming) {
+    if (appointment.googleEventId) continue;
+    try {
+      const business = await findAppointmentOwner(appointment.businessId);
+      if (!business) continue;
+      const created = await createCalendarEvent(buildAppointmentEventPayload(appointment, business));
+      if (created?.googleEventId) {
+        await prisma.appointment.update({
+          where: { id: appointment.id },
+          data: { googleEventId: created.googleEventId },
+        });
+        synced.push(appointment.id);
+      }
+    } catch (err) {
+      console.error('Google backfill sync error (appointment id=%s):', appointment.id, err?.message || err);
+    }
+  }
+  return synced;
 }
