@@ -107,6 +107,7 @@ export default function CalendarPage() {
       window.history.replaceState({}, '', window.location.pathname);
       if (flag === 'connected') toast.success('Google Calendar conectado correctamente');
       else if (flag === 'error') toast.error('Error al conectar Google Calendar');
+      else if (flag === 'email_mismatch') toast.error('La cuenta de Google no coincide con el email de tu usuario');
     }
   }, []);
 

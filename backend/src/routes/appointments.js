@@ -112,13 +112,14 @@ router.post(
       include: { business: { include: { category: true } } },
     });
     // M2 — mirror the appointment to the owner's Google Calendar when sync is
-    // enabled. Defensive: a Google failure never blocks the local booking.
-    await syncAppointmentToGoogleCalendar(appointment);
+    // enabled. Fire-and-forget: the sync runs in the background, so a slow or
+    // failing Google API never delays the booking response.
+    syncAppointmentToGoogleCalendar(appointment).catch(console.error);
     res.status(201).json(appointment);
   }
 );
 
-router.put('/:id/reschedule', authMiddleware, [
+router.put('/:id/reschedule', [
   body('starts_at').isISO8601(),
   body('ends_at').isISO8601(),
 ], async (req, res) => {
@@ -147,7 +148,8 @@ router.put('/:id/reschedule', authMiddleware, [
   });
   sendRescheduleEmail(updated, business).catch(console.error);
   // M2 — keep the mirrored Google Calendar event in sync on reschedule.
-  await syncAppointmentToGoogleCalendar(updated);
+  // Fire-and-forget: the background sync must not delay the reschedule response.
+  syncAppointmentToGoogleCalendar(updated).catch(console.error);
   res.json(updated);
 });
 
@@ -155,7 +157,7 @@ router.put('/:id/reschedule', authMiddleware, [
  * POST /:id/cancel — marks an appointment as cancelled and removes its Google
  * Calendar event (defensive: a Google failure never blocks the cancellation).
  */
-router.post('/:id/cancel', authMiddleware, async (req, res) => {
+router.post('/:id/cancel', async (req, res) => {
   const id = Number(req.params.id);
   const businessId = getCurrentBusinessId(req);
   if (!businessId) return res.status(400).json({ error: 'Select a business' });
@@ -168,11 +170,13 @@ router.post('/:id/cancel', authMiddleware, async (req, res) => {
     data: { status: 'cancelled' },
     include: { business: { include: { category: true } } },
   });
-  await deleteAppointmentGoogleEvent(updated);
+  // M2 — remove the mirrored Google Calendar event in the background; a slow
+  // or failing Google API never delays the cancellation response.
+  deleteAppointmentGoogleEvent(updated).catch(console.error);
   res.json(updated);
 });
 
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const id = Number(req.params.id);
   const businessId = getCurrentBusinessId(req);
   const appointment = await prisma.appointment.findFirst({

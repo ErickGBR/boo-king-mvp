@@ -44,6 +44,9 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:4000/api/google/callback';
 
 const CALENDAR_SCOPES = [
+  // 'openid' is REQUIRED for the token endpoint to return an id_token in the
+  // Calendar OAuth flow — the callback relies on it to verify the account.
+  'openid',
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/calendar.events',
   'profile',

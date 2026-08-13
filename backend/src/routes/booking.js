@@ -97,8 +97,9 @@ router.post('/business/:slug/reserve', [
   });
   sendConfirmationEmail(appointment, business).catch(console.error);
   // M2 — mirror the reservation to the owner's Google Calendar when sync is
-  // enabled. Defensive: a Google failure never blocks the booking.
-  await syncAppointmentToGoogleCalendar(appointment);
+  // enabled. Fire-and-forget: the sync runs in the background, so a slow or
+  // failing Google API never delays the booking response.
+  syncAppointmentToGoogleCalendar(appointment).catch(console.error);
   res.status(201).json({ appointment, success: true });
 });
 

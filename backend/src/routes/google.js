@@ -86,15 +86,19 @@ router.get('/callback', async (req, res) => {
       return redirectTo('error');
     }
     const tokens = await exchangeCode(code);
-    // M1 — the authorized Google account must belong to the same user: if the
-    // user already has an email and the verified ID token carries a different
-    // one, refuse the association.
-    if (tokens?.id_token) {
-      const payload = await verifyGoogleToken(tokens.id_token);
-      const googleEmail = payload?.email;
-      if (googleEmail && user.email && googleEmail.toLowerCase() !== user.email.toLowerCase()) {
-        return redirectTo('email_mismatch');
-      }
+    // M1 — the authorized Google account must belong to the same user. The ID
+    // token is MANDATORY in the Calendar flow: without it (or when it fails
+    // verification, or when it carries a different email) the association is
+    // refused with ?google=error and the refresh token is NEVER persisted.
+    if (!tokens?.id_token) {
+      return redirectTo('error');
+    }
+    const payload = await verifyGoogleToken(tokens.id_token);
+    if (!payload?.email || !user.email) {
+      return redirectTo('error');
+    }
+    if (payload.email.toLowerCase() !== user.email.toLowerCase()) {
+      return redirectTo('error');
     }
     await prisma.user.update({
       where: { id: user.id },
@@ -138,17 +142,24 @@ router.get('/status', authMiddleware, async (req, res) => {
  */
 router.post('/sync', authMiddleware, async (req, res) => {
   try {
-    const { enabled } = req.body || {};
-    const user = await prisma.user.update({
+    const enabled = !!req.body?.enabled;
+    // Validate BEFORE mutating: enabling sync without a connected Google
+    // account returns 400 WITHOUT persisting googleCalendarSync=true, which
+    // would leave the user in a contradictory state (see L-review).
+    const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      data: { googleCalendarSync: !!enabled },
-      select: { googleCalendarSync: true, googleRefreshToken: true },
+      select: { googleRefreshToken: true },
     });
-    if (!user.googleCalendarSync) {
-      return res.json({ syncEnabled: false, synced: 0 });
-    }
-    if (!user.googleRefreshToken) {
+    if (enabled && !user?.googleRefreshToken) {
       return res.status(400).json({ error: 'Connect Google Calendar first' });
+    }
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { googleCalendarSync: enabled },
+      select: { googleCalendarSync: true },
+    });
+    if (!updated.googleCalendarSync) {
+      return res.json({ syncEnabled: false, synced: 0 });
     }
     const synced = await syncAllUpcomingAppointments(req.user.id);
     res.json({ syncEnabled: true, synced });
