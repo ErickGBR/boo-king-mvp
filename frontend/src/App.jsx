@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
@@ -81,8 +82,10 @@ function AppRoutes() {
   );
 }
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 export default function App() {
-  return (
+  const content = (
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
@@ -101,5 +104,13 @@ export default function App() {
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
+  );
+
+  if (!googleClientId) return content;
+
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      {content}
+    </GoogleOAuthProvider>
   );
 }

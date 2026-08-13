@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -134,6 +135,14 @@ export default function Login() {
               {sending ? t('common.loading') : t('login.submit')}
             </button>
           </form>
+
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-gray-400">o</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <GoogleLoginButton />
 
           <p className="mt-5 text-center text-sm text-gray-500">
             {t('login.noAccount')}{' '}

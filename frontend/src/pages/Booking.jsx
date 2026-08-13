@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { SkeletonCard } from '../components/Skeleton';
 import { Skeleton } from '../components/Skeleton';
+import GoogleMapsLink from '../components/GoogleMapsLink';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -368,6 +369,9 @@ export default function Booking() {
               <p className="text-lg font-semibold text-teal-700">Reserva confirmada</p>
               <p className="mt-1 text-sm text-gray-600">Te hemos enviado un correo con los detalles.</p>
             </div>
+            {business.locationType === 'presencial' && business.address && (
+              <GoogleMapsLink address={business.address} />
+            )}
             {business.locationType === 'online' && (
               <div className="mt-6 rounded-xl border border-purple-200 bg-purple-50 p-4">
                 <p className="text-sm font-medium text-purple-800">🔗 Reunión en línea</p>

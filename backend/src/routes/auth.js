@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { signToken, authMiddleware } from '../middleware/auth.js';
+import { verifyGoogleToken, verifyGoogleAccessToken } from '../services/google.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -65,6 +66,52 @@ router.post('/logout', (_, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   res.json({ user: req.user });
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, idToken } = req.body || {};
+    const googleToken = credential || idToken;
+    if (!googleToken) {
+      return res.status(422).json({ error: 'Google credential required' });
+    }
+    // Prefer ID token verification; fall back to tokeninfo for access tokens.
+    let payload = await verifyGoogleToken(googleToken);
+    if (!payload) payload = await verifyGoogleAccessToken(googleToken);
+    if (!payload?.email) {
+      return res.status(401).json({ error: 'Invalid Google token' });
+    }
+    const email = payload.email;
+    let user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true, role: true, avatar: true, googleId: true },
+    });
+    if (user) {
+      if (!user.googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId: payload.sub, avatar: payload.picture || user.avatar },
+          select: { id: true, name: true, email: true, role: true, avatar: true },
+        });
+      }
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name: payload.name || email.split('@')[0],
+          email,
+          googleId: payload.sub,
+          avatar: payload.picture || null,
+          password: null,
+        },
+        select: { id: true, name: true, email: true, role: true, avatar: true },
+      });
+    }
+    const authToken = signToken({ userId: user.id });
+    res.json({ user, token: authToken });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(401).json({ error: 'Google authentication failed' });
+  }
 });
 
 export default router;

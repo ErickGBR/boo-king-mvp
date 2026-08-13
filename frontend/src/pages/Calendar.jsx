@@ -9,6 +9,7 @@ import { api } from '../api/client';
 import { useIsMobile } from '../hooks/useIsMobile';
 import CalendarMobile from '../components/CalendarMobile';
 import { Skeleton } from '../components/Skeleton';
+import { toast } from 'sonner';
 
 function mapToFullCalendar(list) {
   return (list || []).map((e) => ({
@@ -20,11 +21,96 @@ function mapToFullCalendar(list) {
   }));
 }
 
+/**
+ * Google Calendar connect / sync / disconnect controls.
+ * Renders nothing until the /api/google/status request resolves.
+ */
+function GoogleCalendarControls({ googleStatus, setGoogleStatus }) {
+  if (!googleStatus) return null;
+
+  const connect = async () => {
+    try {
+      const { url } = await api('/api/google/auth');
+      window.location.href = url;
+    } catch (err) {
+      toast.error(err.error || 'No se pudo iniciar la conexión con Google');
+    }
+  };
+
+  const toggleSync = async () => {
+    try {
+      const enabled = !googleStatus.syncEnabled;
+      await api('/api/google/sync', { method: 'POST', body: JSON.stringify({ enabled }) });
+      setGoogleStatus({ ...googleStatus, syncEnabled: enabled });
+    } catch (err) {
+      toast.error(err.error || 'No se pudo actualizar la sincronización');
+    }
+  };
+
+  const disconnect = async () => {
+    try {
+      await api('/api/google/disconnect', { method: 'DELETE' });
+      setGoogleStatus(null);
+    } catch (err) {
+      toast.error(err.error || 'No se pudo desconectar Google');
+    }
+  };
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      {googleStatus.connected ? (
+        <>
+          <span className="flex items-center gap-1.5 text-sm text-green-600">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            Google Calendar {googleStatus.syncEnabled ? 'sincronizado' : 'conectado'}
+          </span>
+          <button
+            onClick={toggleSync}
+            className="text-sm font-medium text-[#14b8a6] hover:underline"
+          >
+            {googleStatus.syncEnabled ? 'Desactivar sync' : 'Activar sync'}
+          </button>
+          <button
+            onClick={disconnect}
+            className="text-sm font-medium text-red-500 hover:underline"
+          >
+            Desconectar
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={connect}
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Conectar Google Calendar
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const isMobile = useIsMobile();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [googleStatus, setGoogleStatus] = useState(null);
+
+  const loadGoogleStatus = () => {
+    api('/api/google/status').then(setGoogleStatus).catch(() => setGoogleStatus(null));
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const flag = params.get('google');
+    if (flag) {
+      window.history.replaceState({}, '', window.location.pathname);
+      if (flag === 'connected') toast.success('Google Calendar conectado correctamente');
+      else if (flag === 'error') toast.error('Error al conectar Google Calendar');
+    }
+  }, []);
+
+  useEffect(() => { loadGoogleStatus(); }, []);
 
   const load = () => {
     setLoading(true);
@@ -93,6 +179,7 @@ export default function CalendarPage() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Calendario</h1>
         <p className="mt-1 text-gray-600">Tus citas como cliente y como dueño</p>
+        <GoogleCalendarControls googleStatus={googleStatus} setGoogleStatus={setGoogleStatus} />
         <div className="mt-6 min-h-[500px] rounded-2xl border border-gray-200 bg-white/90 backdrop-blur-sm p-4 sm:p-6">
           <CalendarMobile events={events} />
         </div>
@@ -104,6 +191,7 @@ export default function CalendarPage() {
     <div className="animate-fade-in-up">
       <h1 className="text-2xl font-semibold text-gray-900">Calendario</h1>
       <p className="mt-1 text-gray-600">Tus citas como cliente y como dueño</p>
+      <GoogleCalendarControls googleStatus={googleStatus} setGoogleStatus={setGoogleStatus} />
       <div className="mt-6 min-h-[500px] rounded-2xl border border-gray-200 bg-white/90 backdrop-blur-sm p-4 shadow-md sm:p-6">
         {fullCalendarEl}
       </div>

@@ -35,13 +35,21 @@ export function AuthProvider({ children }) {
         return user;
       });
 
+  const loginWithGoogle = (credential) =>
+    api('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
+      .then(({ user, token }) => {
+        localStorage.setItem('token', token);
+        setUser(user);
+        return user;
+      });
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
