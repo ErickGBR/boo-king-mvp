@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
+import EmptyState from '../components/EmptyState';
+import { SkeletonCard } from '../components/Skeleton';
 
 function BusinessCard({ business }) {
   const navigate = useNavigate();
@@ -12,6 +15,7 @@ function BusinessCard({ business }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      toast.success('Link copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch {}
   };
@@ -33,17 +37,19 @@ function BusinessCard({ business }) {
     }
   };
 
+  const initials = String(business.name).slice(0, 2).toUpperCase();
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center gap-3 px-4 py-4 bg-teal-500 text-white">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/20">N</div>
+    <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-teal-500 to-teal-400 text-white">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/20 text-sm font-bold">{initials}</div>
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-semibold">{business.name}</h2>
           <p className="text-sm opacity-90">{business.category?.name} · {business.durationMinutes} min</p>
         </div>
         <Link
           to={`/dashboard/businesses/${business.id}`}
-          className="hidden shrink-0 rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg_white/20 sm:inline-flex"
+          className="hidden shrink-0 rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg-white/20 sm:inline-flex"
         >
           Editar
         </Link>
@@ -69,14 +75,14 @@ function BusinessCard({ business }) {
           <button
             type="button"
             onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Ver detalle
           </button>
           <button
             type="button"
             onClick={handleShare}
-            className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600"
+            className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 active:scale-[0.97] transition-all"
           >
             Compartir
           </button>
@@ -96,12 +102,27 @@ function BusinessCard({ business }) {
 export default function Businesses() {
   const { user } = useAuth();
   const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const max = user?.subscriptionPlan === 'paid' ? 10 : 2;
   const canAdd = businesses.length < max;
 
   useEffect(() => {
-    api('/api/businesses').then(setBusinesses).catch(() => setBusinesses([]));
+    api('/api/businesses')
+      .then(setBusinesses)
+      .catch(() => setBusinesses([]))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+        </div>
+      </div>
+    );
+  }
 
   if (!businesses.length && !canAdd) {
     return (
@@ -116,7 +137,10 @@ export default function Businesses() {
     <div>
       <div className="mb-6 flex justify-end">
         {canAdd ? (
-          <Link to="/dashboard/businesses/new" className="rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-600">Nuevo negocio</Link>
+          <Link to="/dashboard/businesses/new" className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-600 hover:shadow-lg active:scale-[0.97]">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Nuevo negocio
+          </Link>
         ) : (
           <p className="text-sm text-gray-500">Máximo {max} negocios. <a href="#" className="text-teal-600 hover:underline">Mejorar plan</a></p>
         )}
@@ -124,10 +148,16 @@ export default function Businesses() {
       <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
       <p className="mt-1 text-gray-600">Gestiona tus negocios y enlaces de reserva</p>
       {businesses.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-600">Aún no tienes negocios.</p>
-          <Link to="/dashboard/businesses/new" className="mt-4 inline-block rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-600">Crear primer negocio</Link>
-        </div>
+        <EmptyState
+          icon="🏪"
+          title="No businesses yet"
+          description="Create your first business to start accepting bookings"
+          action={
+            <Link to="/dashboard/businesses/new" className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-600 hover:shadow-lg active:scale-[0.97]">
+              Crear primer negocio
+            </Link>
+          }
+        />
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {businesses.map((b) => (

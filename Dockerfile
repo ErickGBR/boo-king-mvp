@@ -18,4 +18,4 @@ COPY --from=frontend /app/frontend/dist ./public
 EXPOSE 4000
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:/app/data/sqlite.db"
-CMD ["sh", "-c", "npx prisma migrate deploy; npx prisma db push; node prisma/seed.js; node src/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node prisma/seed.js && node src/index.js"]

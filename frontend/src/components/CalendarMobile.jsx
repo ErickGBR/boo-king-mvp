@@ -145,21 +145,21 @@ export default function CalendarMobile({ events = [] }) {
   return (
     <div className="calendar-mobile select-none">
       <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-        <button type="button" onClick={goPrev} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100" aria-label="Mes anterior">
+        <button type="button" onClick={goPrev} className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-200 active:scale-90" aria-label="Mes anterior">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
         <span className="text-sm font-semibold text-gray-800">
           {MONTHS[month]} {year}
         </span>
-        <button type="button" onClick={goNext} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100" aria-label="Mes siguiente">
+        <button type="button" onClick={goNext} className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-200 active:scale-90" aria-label="Mes siguiente">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
       </div>
-      <button type="button" onClick={goToday} className="mt-2 w-full rounded-lg bg-gray-100 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200">
+      <button type="button" onClick={goToday} className="mt-2 w-full rounded-lg bg-gray-100 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200">
         Hoy
       </button>
 
-      <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-xs">
+      <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-xs transition-opacity duration-200">
         {WEEKDAYS.map((w) => (
           <div key={w} className="py-1 font-medium text-gray-500">
             {w}
@@ -175,11 +175,11 @@ export default function CalendarMobile({ events = [] }) {
               key={key}
               type="button"
               onClick={() => handleDayTap(date)}
-              className={`relative flex min-h-[44px] flex-col items-center justify-center rounded-lg py-1 transition active:scale-95 ${
+              className={`relative flex min-h-[44px] flex-col items-center justify-center rounded-lg py-1 transition-all active:scale-95 ${
                 !isCurrentMonth ? 'text-gray-300' : 'text-gray-900'
-              } ${isToday ? 'font-bold text-[#14b8a6]' : ''} ${
+              } ${isToday ? 'font-bold text-teal-500' : ''} ${
                 inRange ? 'bg-teal-100' : ''
-              } ${startOfRange || endOfRange ? 'ring-2 ring-[#14b8a6] ring-offset-1' : ''} ${
+              } ${startOfRange || endOfRange ? 'ring-2 ring-teal-500 ring-offset-1' : ''} ${
                 isCurrentMonth && !inRange ? 'hover:bg-gray-100' : ''
               }`}
             >
@@ -187,7 +187,7 @@ export default function CalendarMobile({ events = [] }) {
               {dayEvents.length > 0 && (
                 <span className="mt-0.5 flex gap-0.5">
                   {dayEvents.slice(0, 3).map((e) => (
-                    <span key={e.id} className="h-1.5 w-1.5 rounded-full bg-[#14b8a6]" />
+                    <span key={e.id} className={`h-1.5 w-1.5 rounded-full ${e.extendedProps?.type === 'cancelled' ? 'bg-red-400' : 'bg-teal-500'}`} />
                   ))}
                   {dayEvents.length > 3 && <span className="text-[10px] text-gray-500">+{dayEvents.length - 3}</span>}
                 </span>
@@ -203,7 +203,7 @@ export default function CalendarMobile({ events = [] }) {
             {rangeStart && rangeEnd ? 'Eventos en el rango' : rangeStart ? 'Eventos del día' : 'Toca un día o elige un rango'}
           </span>
           {(rangeStart || rangeEnd) && (
-            <button type="button" onClick={clearRange} className="text-xs text-[#14b8a6] hover:underline">
+            <button type="button" onClick={clearRange} className="text-xs text-teal-500 hover:underline">
               Limpiar
             </button>
           )}

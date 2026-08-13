@@ -38,9 +38,9 @@ export default function Login() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 px-4">
       <div className="absolute top-4 right-4"><LanguageSwitcher /></div>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm animate-fade-in-up">
         <Link to="/" className="mx-auto mb-8 flex w-fit items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#14b8a6] text-white shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500 text-white shadow-sm">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -53,7 +53,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             {error && (
-              <div className="flex items-start gap-2.5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+              <div className={`flex items-start gap-2.5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ${error ? 'animate-shake' : ''}`} role="alert">
                 <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -63,22 +63,31 @@ export default function Login() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">{t('login.email')}</label>
-              <input
-                id="email"
-                ref={inputRef}
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1.5 w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 disabled:opacity-50"
-                disabled={sending}
-              />
+              <div className="relative mt-1.5">
+                <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <input
+                  id="email"
+                  ref={inputRef}
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-gray-300 py-2.5 pl-10 pr-4 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 disabled:opacity-50"
+                  disabled={sending}
+                  placeholder="email@ejemplo.com"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t('login.password')}</label>
               <div className="relative mt-1.5">
+                <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
                 <input
                   id="password"
                   type={showPwd ? 'text' : 'password'}
@@ -86,8 +95,9 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 pr-10 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 disabled:opacity-50"
+                  className="w-full rounded-xl border border-gray-300 py-2.5 pl-10 pr-10 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 disabled:opacity-50"
                   disabled={sending}
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
@@ -113,7 +123,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={sending}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#14b8a6] py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0d9488] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-teal-600 hover:shadow-lg hover:shadow-teal-500/25 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sending && (
                 <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -127,7 +137,7 @@ export default function Login() {
 
           <p className="mt-5 text-center text-sm text-gray-500">
             {t('login.noAccount')}{' '}
-            <Link to="/register" className="font-medium text-[#14b8a6] hover:text-[#0d9488] hover:underline">
+            <Link to="/register" className="font-medium text-teal-500 hover:text-teal-600 hover:underline">
               {t('login.register')}
             </Link>
           </p>

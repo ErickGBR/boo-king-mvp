@@ -1,5 +1,6 @@
 import { Component } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -29,7 +30,7 @@ class ErrorBoundary extends Component {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100 p-4">
           <p className="text-center text-gray-700">Algo ha fallado. Recarga la página.</p>
-          <button type="button" onClick={() => window.location.reload()} className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600">
+          <button type="button" onClick={() => window.location.reload()} className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 active:scale-[0.97] transition-all duration-200">
             Recargar
           </button>
         </div>
@@ -41,9 +42,22 @@ class ErrorBoundary extends Component {
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="p-8 text-center">Cargando...</div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-teal-500" /></div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
+}
+
+function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="text-8xl font-bold text-teal-500">404</div>
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Page not found</h1>
+      <p className="mt-2 text-gray-600">The page you're looking for doesn't exist.</p>
+      <Link to="/" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-8 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-teal-600 hover:shadow-xl active:scale-[0.97]">
+        ← Go home
+      </Link>
+    </div>
+  );
 }
 
 function AppRoutes() {
@@ -62,6 +76,7 @@ function AppRoutes() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="reportes" element={<Reportes />} />
       </Route>
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
@@ -72,6 +87,17 @@ export default function App() {
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                borderRadius: '12px',
+                padding: '12px 16px',
+                fontSize: '14px',
+              },
+            }}
+          />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

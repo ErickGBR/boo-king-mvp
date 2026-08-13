@@ -78,22 +78,27 @@ export default function RescheduleModal({ appointment, onClose, onRescheduled })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="animate-scale-in max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">Reprogramar cita</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">×</button>
         </div>
-        <p className="mt-1 text-sm text-gray-500">
-          Cita actual: {new Date(appointment.startsAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} a las{' '}
-          {new Date(appointment.startsAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-        </p>
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-teal-50 px-4 py-3 text-sm text-teal-700">
+          <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>
+            Cita actual: {new Date(appointment.startsAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} a las{' '}
+            {new Date(appointment.startsAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
         <div className="mt-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">{MONTHS[month]} {year}</span>
             <div className="flex gap-1">
               <button type="button" onClick={() => setCalendarMonth(new Date(year, month - 1))} className="rounded p-1 text-gray-500 hover:bg-gray-100">‹</button>
-              <button type="button" onClick={() => setCalendarMonth(new Date())} className="rounded px-2 py-1 text-xs text-[#14b8a6] hover:bg-teal-50">Hoy</button>
+              <button type="button" onClick={() => setCalendarMonth(new Date())} className="rounded px-2 py-1 text-xs text-teal-500 hover:bg-teal-50">Hoy</button>
               <button type="button" onClick={() => setCalendarMonth(new Date(year, month + 1))} className="rounded p-1 text-gray-500 hover:bg-gray-100">›</button>
             </div>
           </div>
@@ -107,10 +112,10 @@ export default function RescheduleModal({ appointment, onClose, onRescheduled })
               return (
                 <button key={key} type="button" disabled={!canSelect}
                   onClick={() => canSelect && (setSelectedDate(date), setSelectedSlot(null))}
-                  className={`min-h-[36px] rounded-lg py-1 text-sm transition ${!isCurrentMonth ? 'text-gray-300' : isPast ? 'text-gray-400' : 'text-gray-900'} ${isToday ? 'font-bold text-[#14b8a6]' : ''} ${isSelected ? 'bg-[#14b8a6] text-white' : ''} ${canSelect ? 'hover:bg-teal-50' : ''} ${!canSelect && isCurrentMonth && !isPast ? 'cursor-not-allowed opacity-60' : ''}`}
+                  className={`min-h-[36px] rounded-lg py-1 text-sm transition ${!isCurrentMonth ? 'text-gray-300' : isPast ? 'text-gray-400' : 'text-gray-900'} ${isToday ? 'font-bold text-teal-500' : ''} ${isSelected ? 'bg-teal-500 text-white' : ''} ${canSelect ? 'hover:bg-teal-50' : ''} ${!canSelect && isCurrentMonth && !isPast ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
                   {date.getDate()}
-                  {available && isCurrentMonth && !isPast && !isSelected && <span className="block h-0.5 w-0.5 mx-auto mt-0.5 rounded-full bg-[#14b8a6]" />}
+                  {available && isCurrentMonth && !isPast && !isSelected && <span className="block h-0.5 w-0.5 mx-auto mt-0.5 rounded-full bg-teal-500" />}
                 </button>
               );
             })}
@@ -126,7 +131,7 @@ export default function RescheduleModal({ appointment, onClose, onRescheduled })
               ) : (
                 (slotsByDate[toDateKey(selectedDate)] || []).map((slot) => (
                   <button key={slot.start} type="button" onClick={() => setSelectedSlot(slot)}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${selectedSlot?.start === slot.start ? 'bg-[#14b8a6] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${selectedSlot?.start === slot.start ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   >
                     {slot.start}
                   </button>
@@ -139,12 +144,12 @@ export default function RescheduleModal({ appointment, onClose, onRescheduled })
         {selectedSlot && (
           <div className="mt-4 flex gap-3 border-t pt-4">
             <button type="button" onClick={handleReschedule} disabled={submitting}
-              className="flex-1 rounded-xl bg-[#14b8a6] py-2.5 text-sm font-semibold text-white hover:bg-[#0d9488] disabled:opacity-70"
+              className="flex-1 rounded-xl bg-teal-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-teal-600 active:scale-95 disabled:opacity-70"
             >
               {submitting ? 'Reprogramando...' : 'Confirmar reprogramación'}
             </button>
             <button type="button" onClick={onClose}
-              className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               Cancelar
             </button>
