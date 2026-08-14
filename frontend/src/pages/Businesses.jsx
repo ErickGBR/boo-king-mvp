@@ -16,7 +16,7 @@ function BusinessCard({ business }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast.success('Link copied!');
+      toast.success(t('businesses.linkCopied'));
       setTimeout(() => setCopied(false), 2000);
     } catch {}
   };
@@ -65,7 +65,7 @@ function BusinessCard({ business }) {
             className="shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
             title="Copiar enlace"
           >
-            {copied ? (
+{copied ? (
               <svg className="h-4 w-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             ) : (
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h2m8 0h2a2 2 0 012 2v2m2 4a2 2 0 01-2 2h-2m-4-1H8" /></svg>
@@ -73,24 +73,24 @@ function BusinessCard({ business }) {
           </button>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-<button
+          <button
               type="button"
               onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
               className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               {t('businesses.viewDetail')}
           </button>
-<button
+          <button
               type="button"
               onClick={handleShare}
               className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 active:scale-[0.97] transition-all"
             >
               {t('businesses.share')}
           </button>
-<button
+          <button
               type="button"
               onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
-              className="hidden shrink-0 rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg-white/20 sm:inline-flex"
+              className="inline-flex rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:hidden"
             >
               {t('businesses.edit')}
           </button>
