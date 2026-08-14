@@ -215,10 +215,22 @@ export default function Appointments() {
                   {apt.status === 'confirmed' ? 'Confirmada' : apt.status === 'cancelled' ? 'Cancelada' : apt.status === 'completed' ? 'Completada' : apt.status}
                 </span>
                 {apt.status === 'confirmed' && (
-                  <button type="button" onClick={() => setRescheduleTarget(apt)}
-                    className="shrink-0 rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                    Reprogramar
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => {
+                      if (window.confirm('¿Cancelar esta cita?')) {
+                        api('/api/appointments/' + apt.id + '/cancel', { method: 'POST' })
+                          .then(() => api('/api/appointments?filter=' + filter).then(setAppointments))
+                          .catch(() => setAppointments([]));
+                      }
+                    }}
+                      className="shrink-0 rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50">
+                      Cancelar
+                    </button>
+                    <button type="button" onClick={() => setRescheduleTarget(apt)}
+                      className="shrink-0 rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                      Reprogramar
+                    </button>
+                  </div>
                 )}
               </li>
             ))}

@@ -62,7 +62,7 @@ export default function Dashboard() {
       <div
         role="button"
         tabIndex={0}
-        aria-label={t('common.cancel')}
+        aria-label={sidebarOpen ? t('sidebar.close') : 'Menú'}
         className={`fixed inset-0 z-30 bg-black/50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'}`}
         onClick={closeSidebar}
         onKeyDown={(e) => e.key === 'Escape' && closeSidebar()}
@@ -99,7 +99,7 @@ export default function Dashboard() {
                 className={`animate-fade-in-up animate-stagger-${i + 1} relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
                   active
                     ? 'bg-teal-500 text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-teal-500 before:rounded-r-full'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    : 'text-gray-200 hover:bg-gray-700 hover:text-white'
                 }`}
               >
                 <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +119,7 @@ export default function Dashboard() {
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            <span>{t('common.cancel')}</span>
+            <span>{t('sidebar.close')}</span>
           </button>
         </div>
       </aside>
@@ -129,7 +129,7 @@ export default function Dashboard() {
             type="button"
             onClick={toggleSidebar}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100"
-            aria-label={sidebarOpen ? t('common.cancel') : 'Menú'}
+            aria-label={sidebarOpen ? t('sidebar.close') : 'Menú'}
           >
             {sidebarOpen ? (
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>

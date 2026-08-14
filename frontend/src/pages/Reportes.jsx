@@ -122,7 +122,7 @@ export default function Reportes() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {metrics.map((m, i) => (
-          <div key={m.label} className="animate-fade-in-up animate-stagger-${i + 1} rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <div key={m.label} className={`animate-fade-in-up animate-stagger-${i + 1} rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}>
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500 text-white">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

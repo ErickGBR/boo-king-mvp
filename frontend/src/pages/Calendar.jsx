@@ -64,17 +64,17 @@ function GoogleCalendarControls({ googleStatus, setGoogleStatus }) {
             <span className="h-2 w-2 rounded-full bg-green-500" />
             Google Calendar {googleStatus.syncEnabled ? 'sincronizado' : 'conectado'}
           </span>
-          <button
-            onClick={toggleSync}
-            className="text-sm font-medium text-[#14b8a6] hover:underline"
-          >
-            {googleStatus.syncEnabled ? 'Desactivar sync' : 'Activar sync'}
+<button
+              onClick={toggleSync}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {googleStatus.syncEnabled ? 'Desactivar sync' : 'Activar sync'}
           </button>
-          <button
-            onClick={disconnect}
-            className="text-sm font-medium text-red-500 hover:underline"
-          >
-            Desconectar
+<button
+              onClick={disconnect}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Desconectar
           </button>
         </>
       ) : (

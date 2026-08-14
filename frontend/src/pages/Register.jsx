@@ -23,7 +23,7 @@ export default function Register() {
     setError('');
     setSending(true);
     if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+      setError(t('register.passMin'));
       setSending(false);
       return;
     }
@@ -61,7 +61,7 @@ export default function Register() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Nombre</label>
+              <label className="block text-sm font-medium text-gray-700">{t('register.name')}</label>
               <div className="relative mt-1.5">
                 <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -146,7 +146,7 @@ export default function Register() {
             </button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-500">
-            {t('login.noAccount')} <Link to="/login" className="font-medium text-teal-500 hover:text-teal-600 hover:underline">{t('login.title')}</Link>
+            {t('register.haveAccount')} <Link to="/login" className="font-medium text-teal-500 hover:text-teal-600 hover:underline">{t('register.login')}</Link>
           </p>
         </div>
       </div>

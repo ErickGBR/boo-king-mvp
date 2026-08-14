@@ -56,7 +56,7 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-4 py-1.5 text-sm font-medium text-teal-400">
                 <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
-                {t('nav.tryFree')} — No credit card
+                {nav.tryFree} — {t('hero.noCardShort')}
               </div>
               <h1 className="animate-fade-in-up animate-stagger-1 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
                 {t('hero.title')}
@@ -70,7 +70,7 @@ export default function Home() {
                     {t('hero.cta')}
                     <span aria-hidden>→</span>
                   </Link>
-                  <span className="text-sm text-gray-400">{t('hero.noCard')}</span>
+                  <span className="text-sm text-gray-300">{t('hero.noCard')}</span>
                 </div>
               )}
               {user && (
@@ -132,7 +132,7 @@ export default function Home() {
                   <span className="font-semibold text-gray-900">{t('app.name')}</span>
                 </div>
                 <p className="mt-3 text-sm text-gray-600">{t('footer.description')}</p>
-                <p className="mt-4 text-xs text-gray-400">2026 {t('app.name')}. All rights reserved.</p>
+                <p className="mt-4 text-xs text-gray-400">{t('footer.rights')}</p>
               </div>
               <div className="flex gap-12">
                 <div>

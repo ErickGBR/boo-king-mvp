@@ -50,11 +50,11 @@ function BusinessCard({ business }) {
           to={`/dashboard/businesses/${business.id}`}
           className="hidden shrink-0 rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg-white/20 sm:inline-flex"
         >
-          Editar
+          {t('businesses.edit')}
         </Link>
       </div>
       <div className="px-4 py-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Enlace de reserva</p>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">{t('businesses.bookingLink')}</p>
         <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
           <code className="min-w-0 flex-1 truncate text-sm text-gray-700">{url}</code>
           <button
@@ -71,26 +71,26 @@ function BusinessCard({ business }) {
           </button>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Ver detalle
+<button
+              type="button"
+              onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
+              className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              {t('businesses.viewDetail')}
           </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 active:scale-[0.97] transition-all"
-          >
-            Compartir
+<button
+              type="button"
+              onClick={handleShare}
+              className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 active:scale-[0.97] transition-all"
+            >
+              {t('businesses.share')}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
-            className="inline-flex rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:hidden"
-          >
-            Editar
+<button
+              type="button"
+              onClick={() => navigate(`/dashboard/businesses/${business.id}`)}
+              className="hidden shrink-0 rounded-lg border border-white/40 bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg-white/20 sm:inline-flex"
+            >
+              {t('businesses.edit')}
           </button>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function Businesses() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
+<h1 className="text-2xl font-semibold text-gray-900">{t('businesses.title')}</h1>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
         </div>
@@ -128,16 +128,16 @@ export default function Businesses() {
           Nuevo negocio
         </Link>
       </div>
-      <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">{t('businesses.title')}</h1>
       <p className="mt-1 text-gray-600">Gestiona tus negocios y enlaces de reserva</p>
       {businesses.length === 0 ? (
         <EmptyState
           icon="🏪"
-          title="No businesses yet"
-          description="Create your first business to start accepting bookings"
+          title={t('businesses.emptyTitle')}
+          description={t('businesses.emptyDesc')}
           action={
             <Link to="/dashboard/businesses/new" className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-600 hover:shadow-lg active:scale-[0.97]">
-              Crear primer negocio
+              {t('businesses.createFirst')}
             </Link>
           }
         />

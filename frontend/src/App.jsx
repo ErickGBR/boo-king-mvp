@@ -52,10 +52,10 @@ function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
       <div className="text-8xl font-bold text-teal-500">404</div>
-      <h1 className="mt-4 text-2xl font-bold text-gray-900">Page not found</h1>
-      <p className="mt-2 text-gray-600">The page you're looking for doesn't exist.</p>
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Página no encontrada</h1>
+      <p className="mt-2 text-gray-600">La página que buscas no existe.</p>
       <Link to="/" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-8 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:bg-teal-600 hover:shadow-xl active:scale-[0.97]">
-        ← Go home
+        ← Volver al inicio
       </Link>
     </div>
   );
