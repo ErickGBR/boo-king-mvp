@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { toast } from 'sonner';
@@ -7,6 +8,7 @@ import { SkeletonCard } from '../components/Skeleton';
 
 function BusinessCard({ business }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const url = typeof window !== 'undefined' ? `${window.location.origin}/b/${business.slug}` : '';
 
@@ -101,6 +103,7 @@ function BusinessCard({ business }) {
 export default function Businesses() {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     api('/api/businesses')
