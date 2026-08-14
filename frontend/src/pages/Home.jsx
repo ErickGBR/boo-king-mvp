@@ -56,7 +56,7 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-4 py-1.5 text-sm font-medium text-teal-400">
                 <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
-                {nav.tryFree} — {t('hero.noCardShort')}
+                {t('nav.tryFree')} — {t('hero.noCardShort')}
               </div>
               <h1 className="animate-fade-in-up animate-stagger-1 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
                 {t('hero.title')}
