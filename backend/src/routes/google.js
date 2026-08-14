@@ -31,6 +31,7 @@ const OAUTH_STATE_TTL = '10m';
 function createOAuthState(userId) {
   const nonce = crypto.randomBytes(16).toString('hex');
   return jwt.sign({ userId, nonce, purpose: OAUTH_STATE_PURPOSE }, JWT_SECRET, {
+    algorithm: 'HS256',
     expiresIn: OAUTH_STATE_TTL,
   });
 }
@@ -43,7 +44,9 @@ function createOAuthState(userId) {
  */
 function verifyOAuthState(state) {
   try {
-    const decoded = jwt.verify(state, JWT_SECRET);
+    // HS256 is pinned explicitly (same as authMiddleware): a token whose header
+    // claims another algorithm is rejected instead of being auto-discovered.
+    const decoded = jwt.verify(state, JWT_SECRET, { algorithms: ['HS256'] });
     if (decoded?.purpose !== OAUTH_STATE_PURPOSE || !decoded?.userId) return null;
     return decoded;
   } catch (err) {
