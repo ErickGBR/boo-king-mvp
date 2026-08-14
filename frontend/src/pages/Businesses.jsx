@@ -132,7 +132,7 @@ export default function Businesses() {
         </Link>
       </div>
       <h1 className="text-2xl font-semibold text-gray-900">{t('businesses.title')}</h1>
-      <p className="mt-1 text-gray-600">Gestiona tus negocios y enlaces de reserva</p>
+      <p className="mt-1 text-gray-600">{t('businesses.subtitle')}</p>
       {businesses.length === 0 ? (
         <EmptyState
           icon="🏪"
