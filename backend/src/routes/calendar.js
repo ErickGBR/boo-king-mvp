@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 router.use(authMiddleware);
 
-router.get('/events', async (req, res) => {
+router.get('/events', asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const asClient = await prisma.appointment.findMany({
     where: { userId },
@@ -43,6 +44,6 @@ router.get('/events', async (req, res) => {
     });
   }
   res.json(events);
-});
+}));
 
 export default router;

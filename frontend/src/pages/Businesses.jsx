@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import EmptyState from '../components/EmptyState';
 import { SkeletonCard } from '../components/Skeleton';
@@ -100,11 +99,8 @@ function BusinessCard({ business }) {
 }
 
 export default function Businesses() {
-  const { user } = useAuth();
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const max = user?.subscriptionPlan === 'paid' ? 10 : 2;
-  const canAdd = businesses.length < max;
 
   useEffect(() => {
     api('/api/businesses')
@@ -124,26 +120,13 @@ export default function Businesses() {
     );
   }
 
-  if (!businesses.length && !canAdd) {
-    return (
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
-        <p className="mt-2 text-gray-500">Límite de negocios alcanzado para tu plan.</p>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-6 flex justify-end">
-        {canAdd ? (
-          <Link to="/dashboard/businesses/new" className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-600 hover:shadow-lg active:scale-[0.97]">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Nuevo negocio
-          </Link>
-        ) : (
-          <p className="text-sm text-gray-500">Máximo {max} negocios. <a href="#" className="text-teal-600 hover:underline">Mejorar plan</a></p>
-        )}
+        <Link to="/dashboard/businesses/new" className="inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-600 hover:shadow-lg active:scale-[0.97]">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          Nuevo negocio
+        </Link>
       </div>
       <h1 className="text-2xl font-semibold text-gray-900">Mis negocios</h1>
       <p className="mt-1 text-gray-600">Gestiona tus negocios y enlaces de reserva</p>

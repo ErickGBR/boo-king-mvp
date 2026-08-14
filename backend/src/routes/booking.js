@@ -4,11 +4,12 @@ import { PrismaClient } from '@prisma/client';
 import { getAvailableSlots, getAvailableSlotsForRange, isSlotAvailableForBusiness } from '../services/bookingSlots.js';
 import { sendConfirmationEmail } from '../services/email.js';
 import { syncAppointmentToGoogleCalendar } from '../services/google.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-router.get('/business/:slug', async (req, res) => {
+router.get('/business/:slug', asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({
     where: { slug: req.params.slug },
     include: { category: true, schedules: true },
@@ -32,9 +33,9 @@ router.get('/business/:slug', async (req, res) => {
     },
     dates,
   });
-});
+}));
 
-router.get('/business/:slug/slots', async (req, res) => {
+router.get('/business/:slug/slots', asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({
     where: { slug: req.params.slug },
   });
@@ -43,9 +44,9 @@ router.get('/business/:slug/slots', async (req, res) => {
   if (!date) return res.status(422).json({ error: 'date required' });
   const slots = await getAvailableSlots(business, date);
   res.json({ slots });
-});
+}));
 
-router.get('/business/:slug/calendar-slots', async (req, res) => {
+router.get('/business/:slug/calendar-slots', asyncHandler(async (req, res) => {
   const business = await prisma.business.findUnique({
     where: { slug: req.params.slug },
   });
@@ -56,7 +57,7 @@ router.get('/business/:slug/calendar-slots', async (req, res) => {
   const events = await getAvailableSlotsForRange(business, start, end);
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.json(events);
-});
+}));
 
 router.post('/business/:slug/reserve', [
   param('slug').exists(),
@@ -67,7 +68,7 @@ router.post('/business/:slug/reserve', [
   body('guest_phone').optional().isLength({ max: 50 }),
   body('notify_by_email').optional().isBoolean(),
   body('notes').optional().isLength({ max: 500 }),
-], async (req, res) => {
+], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
   const business = await prisma.business.findUnique({
@@ -101,6 +102,6 @@ router.post('/business/:slug/reserve', [
   // failing Google API never delays the booking response.
   syncAppointmentToGoogleCalendar(appointment).catch(console.error);
   res.status(201).json({ appointment, success: true });
-});
+}));
 
 export default router;

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -29,7 +30,7 @@ function addDays(d, n) {
   return x;
 }
 
-router.get('/summary', async (req, res) => {
+router.get('/summary', asyncHandler(async (req, res) => {
   const businessId = getCurrentBusinessId(req);
   // Guard against NaN/negative ids: Prisma would reject NaN with a 500, and a
   // non-numeric id can never be a valid business. Ownership is verified below.
@@ -99,6 +100,6 @@ router.get('/summary', async (req, res) => {
     },
     byDay: Object.values(byDayMap).sort((a, b) => a.date.localeCompare(b.date)),
   });
-});
+}));
 
 export default router;

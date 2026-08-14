@@ -3,6 +3,7 @@ import { body, query, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 import { verifyBusinessOwnership } from '../middleware/ownership.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 import { getAvailableSlots, getAvailableSlotsForRange } from '../services/bookingSlots.js';
 import { sendRescheduleEmail } from '../services/email.js';
 import { syncAppointmentToGoogleCalendar, deleteAppointmentGoogleEvent } from '../services/google.js';
@@ -24,7 +25,7 @@ function getCurrentBusinessId(req) {
 
 router.get('/', [
   query('filter').optional().isIn(['all', 'today', 'upcoming', 'past']),
-], verifyBusinessOwnership, async (req, res) => {
+], verifyBusinessOwnership, asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
   const businessId = req.business.id;
@@ -55,12 +56,12 @@ router.get('/', [
     take: 20,
   });
   res.json(appointments);
-});
+}));
 
 router.get('/calendar-slots', [
   query('start').isISO8601(),
   query('end').isISO8601(),
-], async (req, res) => {
+], asyncHandler(async (req, res) => {
   const businessId = getCurrentBusinessId(req);
   if (!businessId) return res.status(400).json({ error: 'Select a business' });
   const errors = validationResult(req);
@@ -73,7 +74,7 @@ router.get('/calendar-slots', [
   const events = await getAvailableSlotsForRange(business, req.query.start, req.query.end);
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.json(events);
-});
+}));
 
 router.post(
   '/',
@@ -86,7 +87,7 @@ router.post(
     body('guest_phone').optional().isLength({ max: 50 }),
     body('notes').optional().isLength({ max: 500 }),
   ],
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     // req.business was set by verifyBusinessOwnership: it is the business of
@@ -123,12 +124,12 @@ router.post(
     syncAppointmentToGoogleCalendar(appointment).catch(console.error);
     res.status(201).json(appointment);
   }
-);
+));
 
 router.put('/:id/reschedule', verifyBusinessOwnership, [
   body('starts_at').isISO8601(),
   body('ends_at').isISO8601(),
-], async (req, res) => {
+], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
   const id = Number(req.params.id);
@@ -156,13 +157,13 @@ router.put('/:id/reschedule', verifyBusinessOwnership, [
   // Fire-and-forget: the background sync must not delay the reschedule response.
   syncAppointmentToGoogleCalendar(updated).catch(console.error);
   res.json(updated);
-});
+}));
 
 /**
  * POST /:id/cancel — marks an appointment as cancelled and removes its Google
  * Calendar event (defensive: a Google failure never blocks the cancellation).
  */
-router.post('/:id/cancel', verifyBusinessOwnership, async (req, res) => {
+router.post('/:id/cancel', verifyBusinessOwnership, asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: 'Appointment not found' });
   const appointment = await prisma.appointment.findFirst({
@@ -178,7 +179,7 @@ router.post('/:id/cancel', verifyBusinessOwnership, async (req, res) => {
   // or failing Google API never delays the cancellation response.
   deleteAppointmentGoogleEvent(updated).catch(console.error);
   res.json(updated);
-});
+}));
 
 /**
  * GET /:id — CRITICAL (C2): the appointment is looked up via its business
@@ -186,7 +187,7 @@ router.post('/:id/cancel', verifyBusinessOwnership, async (req, res) => {
  * businesses they own. A missing or foreign appointment returns 404 (never
  * 403) to avoid leaking its existence.
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: 'Not found' });
   const appointment = await prisma.appointment.findFirst({
@@ -195,6 +196,6 @@ router.get('/:id', async (req, res) => {
   });
   if (!appointment) return res.status(404).json({ error: 'Not found' });
   res.json(appointment);
-});
+}));
 
 export default router;

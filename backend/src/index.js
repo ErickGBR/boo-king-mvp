@@ -17,6 +17,7 @@ import googleRoutes from './routes/google.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// TODO(pre-prod): restringir CORS origin a los dominios del frontend
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -43,9 +44,17 @@ if (isProduction) {
   });
 }
 
+// Global error middleware — every async handler is wrapped with asyncHandler
+// (src/middleware/asyncHandler.js), so ANY rejection lands here instead of
+// crashing the process (QA finding CRÍTICO). The full error is logged
+// server-side, but internal details are never leaked to the client: 5xx
+// responses are generic; only explicit 4xx errors (err.status) set by our own
+// handlers expose their message.
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  if (res.headersSent) return next(err);
+  const status = err.status || 500;
+  res.status(status).json({ error: status >= 500 ? 'Internal server error' : err.message });
 });
 
 app.listen(Number(PORT), '0.0.0.0', () => {

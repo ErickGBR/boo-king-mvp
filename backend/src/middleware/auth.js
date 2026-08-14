@@ -27,6 +27,7 @@ export function verifyToken(token) {
 }
 
 export async function authMiddleware(req, res, next) {
+  // TODO(pre-prod): eliminar fallback de cookie o marcar httpOnly+sameSite strict
   const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });

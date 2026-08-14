@@ -4,6 +4,7 @@ import { body, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { signToken, authMiddleware } from '../middleware/auth.js';
 import { verifyGoogleToken, exchangeCode } from '../services/google.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -15,7 +16,7 @@ router.post(
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }),
   ],
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
@@ -33,12 +34,12 @@ router.post(
     const token = signToken({ userId: user.id });
     res.status(201).json({ user, token });
   }
-);
+));
 
 router.post(
   '/login',
   [body('email').isEmail().normalizeEmail(), body('password').exists()],
-  async (req, res) => {
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
@@ -58,15 +59,15 @@ router.post(
       token,
     });
   }
-);
+));
 
 router.post('/logout', (_, res) => {
   res.clearCookie('token').json({ ok: true });
 });
 
-router.get('/me', authMiddleware, async (req, res) => {
+router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
   res.json({ user: req.user });
-});
+}));
 
 /**
  * POST /api/auth/google — Google sign-in via the OAuth2 auth-code flow
@@ -76,7 +77,7 @@ router.get('/me', authMiddleware, async (req, res) => {
  * GOOGLE_CLIENT_ID and requires email_verified === true. An access token is
  * never accepted, so the insecure tokeninfo fallback was removed.
  */
-router.post('/google', async (req, res) => {
+router.post('/google', asyncHandler(async (req, res) => {
   try {
     const { code } = req.body || {};
     if (!code || typeof code !== 'string') {
@@ -121,6 +122,6 @@ router.post('/google', async (req, res) => {
     console.error('Google auth error:', err);
     res.status(401).json({ error: 'Google authentication failed' });
   }
-});
+}));
 
 export default router;

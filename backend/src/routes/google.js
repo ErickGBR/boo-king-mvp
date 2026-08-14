@@ -9,6 +9,7 @@ import {
   verifyGoogleToken,
   syncAllUpcomingAppointments,
 } from '../services/google.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -74,7 +75,7 @@ router.get('/auth', authMiddleware, (req, res) => {
  * code, verifies that the authorized Google account email matches the user's
  * email (M1), stores the refresh token and redirects back to the frontend.
  */
-router.get('/callback', async (req, res) => {
+router.get('/callback', asyncHandler(async (req, res) => {
   const redirectTo = (flag) => res.redirect(`${FRONTEND_URL}/dashboard/calendar?google=${flag}`);
   try {
     const { code, state } = req.query;
@@ -116,12 +117,12 @@ router.get('/callback', async (req, res) => {
     console.error('Google callback error:', err);
     return redirectTo('error');
   }
-});
+}));
 
 /**
  * GET /api/google/status — returns whether Google Calendar is connected and sync enabled.
  */
-router.get('/status', authMiddleware, async (req, res) => {
+router.get('/status', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -135,7 +136,7 @@ router.get('/status', authMiddleware, async (req, res) => {
     console.error('Google status error:', err);
     res.status(500).json({ error: 'Could not fetch Google status' });
   }
-});
+}));
 
 /**
  * POST /api/google/sync — enables or disables automatic Calendar sync.
@@ -144,7 +145,7 @@ router.get('/status', authMiddleware, async (req, res) => {
  * appointments of the user's businesses that are not yet mirrored are pushed
  * to Google Calendar and their googleEventId is persisted (see M2).
  */
-router.post('/sync', authMiddleware, async (req, res) => {
+router.post('/sync', authMiddleware, asyncHandler(async (req, res) => {
   try {
     const enabled = !!req.body?.enabled;
     // Validate BEFORE mutating: enabling sync without a connected Google
@@ -171,12 +172,12 @@ router.post('/sync', authMiddleware, async (req, res) => {
     console.error('Google sync error:', err);
     res.status(500).json({ error: 'Could not update Google sync' });
   }
-});
+}));
 
 /**
  * DELETE /api/google/disconnect — removes the refresh token and disables sync.
  */
-router.delete('/disconnect', authMiddleware, async (req, res) => {
+router.delete('/disconnect', authMiddleware, asyncHandler(async (req, res) => {
   try {
     await prisma.user.update({
       where: { id: req.user.id },
@@ -187,6 +188,6 @@ router.delete('/disconnect', authMiddleware, async (req, res) => {
     console.error('Google disconnect error:', err);
     res.status(500).json({ error: 'Could not disconnect Google' });
   }
-});
+}));
 
 export default router;

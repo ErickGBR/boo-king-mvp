@@ -3,6 +3,7 @@ import { body, param, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { verifyBusinessOwnership } from '../middleware/ownership.js';
+import asyncHandler from '../middleware/asyncHandler.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -15,18 +16,18 @@ router.use(authMiddleware);
 // whether the target business exists. This closes the IDOR where a user could
 // read/mutate the staff of another user's business.
 
-router.get('/', verifyBusinessOwnership, async (req, res) => {
+router.get('/', verifyBusinessOwnership, asyncHandler(async (req, res) => {
   const staff = await prisma.businessStaff.findMany({
     where: { businessId: req.business.id },
     include: { user: { select: { id: true, name: true, email: true, role: true } } },
   });
   res.json(staff);
-});
+}));
 
 router.post('/', requireRole('owner', 'admin'), verifyBusinessOwnership, [
   body('userId').isInt(),
   body('role').optional().isIn(['owner', 'admin', 'staff']),
-], async (req, res) => {
+], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
   const { userId, role } = req.body;
@@ -40,11 +41,11 @@ router.post('/', requireRole('owner', 'admin'), verifyBusinessOwnership, [
     include: { user: { select: { id: true, name: true, email: true, role: true } } },
   });
   res.status(201).json(member);
-});
+}));
 
 router.delete('/:id', requireRole('owner', 'admin'), verifyBusinessOwnership, [
   param('id').isInt(),
-], async (req, res) => {
+], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(404).json({ error: 'Not found' });
   const id = Number(req.params.id);
@@ -52,6 +53,6 @@ router.delete('/:id', requireRole('owner', 'admin'), verifyBusinessOwnership, [
   if (!member) return res.status(404).json({ error: 'Not found' });
   await prisma.businessStaff.delete({ where: { id } });
   res.json({ ok: true });
-});
+}));
 
 export default router;
