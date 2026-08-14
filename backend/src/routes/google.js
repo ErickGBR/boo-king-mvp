@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, JWT_SECRET } from '../middleware/auth.js';
 import {
   getAuthUrl,
   exchangeCode,
@@ -14,8 +14,9 @@ const router = Router();
 const prisma = new PrismaClient();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-// Same default as middleware/auth.js — kept local to avoid touching that file.
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+// C1 — JWT_SECRET is imported (validated, no 'dev-secret' fallback) from
+// middleware/auth.js, which throws at startup when it is not set. This module
+// never initializes the OAuth state signing with an insecure default.
 
 const OAUTH_STATE_PURPOSE = 'google_calendar_oauth';
 const OAUTH_STATE_TTL = '10m';

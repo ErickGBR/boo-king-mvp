@@ -2,15 +2,25 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+// CRITICAL (C1) — never fall back to a hardcoded JWT secret. With a known
+// default secret anyone could forge valid tokens and take over any account.
+// If JWT_SECRET is missing from the environment, fail fast at startup instead
+// of booting with an unsafe default. routes/google.js consumes this same
+// validated constant (single source of truth), so the fatal error also covers
+// the OAuth state signing there.
+export const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in environment');
+}
 
 export function signToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' });
 }
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
   } catch {
     return null;
   }

@@ -31,7 +31,11 @@ function addDays(d, n) {
 
 router.get('/summary', async (req, res) => {
   const businessId = getCurrentBusinessId(req);
-  if (!businessId) return res.status(400).json({ error: 'Select a business' });
+  // Guard against NaN/negative ids: Prisma would reject NaN with a 500, and a
+  // non-numeric id can never be a valid business. Ownership is verified below.
+  if (!businessId || !Number.isInteger(businessId) || businessId <= 0) {
+    return res.status(400).json({ error: 'Select a business' });
+  }
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId: req.user.id },
