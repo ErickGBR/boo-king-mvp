@@ -1,0 +1,43 @@
+node_modules
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+dist
+build
+*.local
+.idea
+.vscode
+Thumbs.db
+# Bases de datos de desarrollo (SQLite) — nunca commitear
+*.db
+*.db-journal
+
+# Build artifacts
+.next/
+.next-env.d.ts
+*.tsbuildinfo
+build/
+dist/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+
+# PWA
+public/sw.js
+public/workbox-*.js
