@@ -1,0 +1,51 @@
+# Build context exclusions for BOTH images (the root context feeds the API
+# image — ./Dockerfile — and the frontend image when Render builds it without
+# an explicit dockerContext).
+#
+# IMPORTANT (observed): Docker anchors a pattern that contains no `/` to the
+# WHOLE relative path, so a bare `.env.*` does NOT match `frontend/.env.local`.
+# Nested paths therefore need an explicit `**/` prefix.
+#
+# Rule of thumb: anything the image rebuilds (`yarn build`) or creates at
+# runtime must never be sent as context.
+
+# ── Dependencies: installed inside the image with `yarn install --frozen-lockfile`
+node_modules
+**/node_modules
+
+# ── Build output: always regenerated inside the image
+**/dist
+**/.next
+**/coverage
+**/test-results
+**/playwright-report
+
+# ── Test sources + throwaway test database (production images never run tests)
+backend/test
+
+# ── Secrets / local env files: no .env may ever reach an image layer
+**/.env
+**/.env.*
+**/.env.local
+
+# ── Databases: SQLite is runtime state on the /app/data disk, never baked in
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+**/*.sqlite
+
+# ── Repo docs & screenshots: the API image only `COPY backend/`, so nothing
+# here is ever read by a build. They are 90 MB of the context (measured:
+# docs/ 84 MB, design-preview/ 5.9 MB, screenshots/ 2.4 MB) and Render uploads
+# the whole context on EVERY deploy — excluding them keeps the API build fast.
+docs
+screenshots
+design-preview
+
+# ── Local noise
+.git
+.gitignore
+**/*.md
+**/*.log
+**/.tmp
