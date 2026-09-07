@@ -1,0 +1,114 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: boo-king-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    # `required: false` so a fresh clone (no backend/.env yet) still boots with
+    # the defaults below instead of failing the whole compose run.
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: "file:/app/data/sqlite.db"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend_data:/app/data
+    networks:
+      - boo-king
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # The `deps` stage is the only stage of that Dockerfile with the full
+      # dependency set (devDeps included) at /app/node_modules. The runner stage
+      # is a production standalone bundle whose CMD (`node server.js`) is
+      # shadowed by the source bind-mount below — running it here failed with
+      # "Cannot find module '/app/server.js'" (observed).
+      target: deps
+    container_name: boo-king-frontend
+    restart: unless-stopped
+    # `next dev` + source bind-mount = the hot reload the README promises.
+    command: ["yarn", "dev"]
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Server-side target of the `/api/:path*` rewrite in next.config.mjs
+      # (replaces the Vite-era VITE_PROXY_TARGET, which nothing reads anymore).
+      BACKEND_URL: http://backend:4000
+      # Browser-side base URL; leave empty to use the same-origin rewrite above.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - boo-king
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================
+  # PRODUCTION (backend-only image, same topology as Render):
+  #   docker compose --profile production up --build -d
+  # API: http://localhost:8080
+  # The frontend is deployed as its own service (frontend/Dockerfile).
+  # ============================================================
+  production:
+    profiles: ["production"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: boo-king-production
+    restart: unless-stopped
+    ports:
+      - "8080:4000"
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: "file:/app/data/sqlite.db"
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - backend_data:/app/data
+    networks:
+      - boo-king
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  boo-king:
+    driver: bridge
+
+volumes:
+  backend_data:
+    driver: local
