@@ -1,0 +1,65 @@
+# Two-service topology (see README → Render Deployment):
+#   cooking-api → ./Dockerfile            (NestJS API + Prisma/SQLite on a disk)
+#   cooking-web → ./frontend/Dockerfile   (Next.js 15 standalone)
+#
+# NOTE on Build vs Runtime env vars: for Docker services Render translates every
+# env var into a Docker BUILD ARG as well as a runtime variable. Variables that
+# Next.js INLINES into the client bundle (NEXT_PUBLIC_*) or into its rewrite
+# manifest (BACKEND_URL, read by next.config.mjs at build time) must therefore
+# be declared with ARG+ENV in frontend/Dockerfile, or the deployed bundle keeps
+# whatever was baked in at image build time.
+services:
+  # ── API ────────────────────────────────────────────────────────────────────
+  - type: web
+    name: cooking-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    disk:
+      name: sqlite-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Prisma provider is `sqlite`: the URL must be a file path on the disk.
+      - key: DATABASE_URL
+        value: file:/app/data/sqlite.db
+      - key: JWT_SECRET
+        generateValue: true
+      # Browser origin allowed to call this API. The code default is
+      # http://localhost:5173,http://localhost:3000, so WITHOUT this the
+      # deployed frontend is blocked by CORS.
+      - key: CORS_ORIGINS
+        value: https://cooking-web.onrender.com
+      # Origin the Google OAuth callback redirects to (code default: localhost).
+      - key: FRONTEND_URL
+        value: https://cooking-web.onrender.com
+
+  # ── Web ────────────────────────────────────────────────────────────────────
+  - type: web
+    name: cooking-web
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./frontend/Dockerfile
+    # CRITICAL: Render's default build context is the REPO ROOT (see
+    # render.com/docs/blueprint-spec → dockerContext). frontend/Dockerfile
+    # starts with `COPY package.json yarn.lock ./`, which resolves to the root
+    # manifests (no Next.js) and to `COPY . .` (whole monorepo) without this.
+    dockerContext: ./frontend
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Server-side target of the `/api/:path*` rewrite in next.config.mjs.
+      # Rewrites are compiled into .next at BUILD time, so the value must exist
+      # during the image build (Render passes it as a build arg).
+      - key: BACKEND_URL
+        value: https://cooking-api.onrender.com
+      # Browser-side base URL, also inlined at BUILD time. Empty on purpose:
+      # the client then calls same-origin /api/* and the rewrite above proxies
+      # to the API (no CORS, no localhost leaking into the bundle).
+      - key: NEXT_PUBLIC_API_URL
+        value: ""
