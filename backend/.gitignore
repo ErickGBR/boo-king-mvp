@@ -1,0 +1,5 @@
+# Jest coverage output
+coverage/
+
+# Throwaway test database and runtime artifacts
+test/.tmp/
